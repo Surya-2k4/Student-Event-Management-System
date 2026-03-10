@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter_auth/screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
@@ -22,10 +24,7 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     // Start the animation
     _controller.forward();
@@ -59,11 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
         child: Center(
           child: FadeTransition(
             opacity: _animation,
-            child: Image.asset(
-              'assets/kecc_logo.png',
-              width: 200,
-              height: 200,
-            ),
+            child: Image.asset('assets/kecc_logo.png', width: 200, height: 200),
           ),
         ),
       ),

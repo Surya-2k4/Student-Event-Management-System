@@ -30,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       emailController.text,
       passwordController.text,
     );
+    if (!mounted) return;
     if (error == null) {
       showDialog(
         context: context,
@@ -97,7 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       border: Border.all(color: Colors.grey, width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.grey.withValues(alpha: 0.5),
                           blurRadius: 10,
                           spreadRadius: 2,
                         ),

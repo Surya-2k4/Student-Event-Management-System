@@ -5,8 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ViewEvents extends StatefulWidget {
+  const ViewEvents({super.key});
+
   @override
-  _ViewEventsState createState() => _ViewEventsState();
+  State<ViewEvents> createState() => _ViewEventsState();
 }
 
 class _ViewEventsState extends State<ViewEvents> {
@@ -57,7 +59,7 @@ class _ViewEventsState extends State<ViewEvents> {
           isLoading = false;
         });
       }
-      print("Error fetching events: $e");
+      debugPrint("Error fetching events: $e");
     }
   }
 

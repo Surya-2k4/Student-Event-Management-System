@@ -32,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     String? error = await authService.login(email, password);
+    if (!mounted) return;
     if (error == null) {
       Navigator.pushReplacement(
         context,
@@ -66,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: Border.all(color: Colors.grey, width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.grey.withValues(alpha: 0.5),
                           blurRadius: 10,
                           spreadRadius: 2,
                         ),

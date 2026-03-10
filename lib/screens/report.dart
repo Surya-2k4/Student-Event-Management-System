@@ -9,7 +9,7 @@ import 'dart:io';
 import 'user_screen.dart';
 
 class Report extends StatefulWidget {
-  const Report();
+  const Report({super.key});
 
   @override
   State<Report> createState() => _ReportState();
@@ -41,10 +41,11 @@ class _ReportState extends State<Report> {
   }
 
   Future<void> fetchEvents() async {
-    final String apiUrl = "http://localhost:5000/view-events"; // Replace if needed
+    final String apiUrl =
+        "http://localhost:5000/view-events"; // Replace if needed
 
     try {
-        final response = await http.get(
+      final response = await http.get(
         Uri.parse(
           email.endsWith('@kongu.ac.in') ? apiUrl : "$apiUrl?email=$email",
         ),
@@ -52,7 +53,7 @@ class _ReportState extends State<Report> {
 
       if (response.statusCode == 200) {
         setState(() {
-         events = json.decode(response.body).reversed.toList();
+          events = json.decode(response.body).reversed.toList();
           filteredEvents = events;
           isLoading = false;
         });
@@ -63,14 +64,13 @@ class _ReportState extends State<Report> {
       setState(() {
         isLoading = false;
       });
-      print("Error fetching events: $e");
+      debugPrint("Error fetching events: $e");
     }
   }
 
   void filterEvents() async {
     final queryParameters = {
-         if (!email.endsWith('@kongu.ac.in'))
-      'email': email,
+      if (!email.endsWith('@kongu.ac.in')) 'email': email,
       'year': yearController.text,
       'symposiumName': searchController.text,
       'college': collegeController.text,
@@ -91,7 +91,7 @@ class _ReportState extends State<Report> {
         throw Exception("Failed to load filtered events");
       }
     } catch (e) {
-      print("Error fetching filtered events: $e");
+      debugPrint("Error fetching filtered events: $e");
     }
   }
 
@@ -116,7 +116,7 @@ class _ReportState extends State<Report> {
                 ),
               ),
               pw.SizedBox(height: 20),
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: [
                   "Full Name",
                   "Email",
@@ -168,6 +168,7 @@ class _ReportState extends State<Report> {
     final file = File(path);
     await file.writeAsBytes(await pdf.save());
 
+    if (!mounted) return;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text("Report downloaded to $path")));
@@ -184,7 +185,7 @@ class _ReportState extends State<Report> {
       searchController.clear();
       collegeController.clear();
       yearController.clear();
-      position = 'None';  
+      position = 'None';
       eventType = 'None';
     });
   }
@@ -219,63 +220,10 @@ class _ReportState extends State<Report> {
                   return SingleChildScrollView(
                     child: Column(
                       children: [
+                        _buildOverviewDashboard(events),
+                        const SizedBox(height: 10),
                         Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: GridView.count(
-                            crossAxisCount: constraints.maxWidth > 600 ? 4 : 2,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            childAspectRatio:
-                                constraints.maxWidth > 600 ? 2 : 1.5,
-                            children: [
-                              _buildSummaryCard(
-                                "Total Events Participated",
-                                events.length.toString(),
-                                Icons.event,
-                              ),
-                              _buildSummaryCard(
-                                "Total Intra Events",
-                                events
-                                    .where(
-                                      (event) =>
-                                          event['interOrIntraEvent'] == 'Intra',
-                                    )
-                                    .length
-                                    .toString(),
-                                Icons.school,
-                              ),
-                              _buildSummaryCard(
-                                "Total Inter Events",
-                                events
-                                    .where(
-                                      (event) =>
-                                          event['interOrIntraEvent'] == 'Inter',
-                                    )
-                                    .length
-                                    .toString(),
-                                Icons.public,
-                              ),
-                              _buildSummaryCard(
-                                "Top 3 Positions",
-                                events
-                                    .where(
-                                      (event) =>
-                                          int.tryParse(
-                                                event['positionSecured'],
-                                              ) !=
-                                              null &&
-                                          int.parse(event['positionSecured']) <=
-                                              3,
-                                    )
-                                    .length
-                                    .toString(),
-                                Icons.emoji_events,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: Column(
                             children: [
                               _buildFilterField(
@@ -322,7 +270,7 @@ class _ReportState extends State<Report> {
                                   },
                                 ),
                               ),
-                               Padding(
+                              Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8.0,
                                 ),
@@ -391,91 +339,121 @@ class _ReportState extends State<Report> {
                           shrinkWrap: true,
                           physics: NeverScrollableScrollPhysics(),
                           itemCount: filteredEvents.length,
-                          itemBuilder: (context, index) {
-                            final event = filteredEvents[index];
-                            return Card(
-                              elevation: 4,
-                              margin: EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 5,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ExpansionTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.blueAccent,
-                                  child: Text(
-                                    event["eventName"][0].toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.white,
+                            itemBuilder: (context, index) {
+                              final event = filteredEvents[index];
+                              final String displayName =
+                                  (event["eventName"] ??
+                                          event["symposiumName"] ??
+                                          "Unnamed Event")
+                                      .toString();
+                              return Card(
+                                elevation: 4,
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 5,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ExpansionTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: Colors.blueAccent,
+                                    child: Text(
+                                      displayName.isNotEmpty
+                                          ? displayName[0].toUpperCase()
+                                          : "?",
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                title: Text(
-                                  event["eventName"],
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text("Full Name: ${event['name']}"),
-                                        Text("Email: ${event['email']}"),
-                                        Text(
-                                          "College Name: ${event['college']}",
-                                        ),
-                                        Text("Contact: ${event['contact']}"),
-                                        Text(
-                                          "Roll Number: ${event['rollNumber']}",
-                                        ),
-                                        Text(
-                                          "Symposium Name: ${event['symposiumName']}",
-                                        ),
-                                        Text(
-                                          "Event Type: ${event['eventType']}",
-                                        ),
-                                        Text(
-                                          "Team or Individual: ${event['teamOrIndividual']}",
-                                        ),
-                                        Text(
-                                          "Team Members: ${event['teamMembers']}",
-                                        ),
-                                        Text(
-                                          "Event Date: ${event['eventDate']}",
-                                        ),
-                                        Text(
-                                          "Event Days Spent: ${event['eventDaysSpent']}",
-                                        ),
-                                        Text(
-                                          "Prize Amount: ${event['prizeAmount']}",
-                                        ),
-                                        Text(
-                                          "Position Secured: ${event['positionSecured']}",
-                                        ),
-                                        Text(
-                                          "Certification Link: ${event['certificationLink']}",
-                                        ),
-                                        Text(
-                                          "Inter or Intra Event: ${event['interOrIntraEvent']}",
-                                        ),
-                                        Text(
-                                          "Date Registered: ${event['date']}",
-                                        ),
-                                      ],
+                                  title: Text(
+                                    displayName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
                                     ),
                                   ),
-                                ],
-                              ),
-                            );
-                          },
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          _buildDetailText(
+                                            "Full Name",
+                                            event['name'],
+                                          ),
+                                          _buildDetailText(
+                                            "Email",
+                                            event['email'],
+                                          ),
+                                          _buildDetailText(
+                                            "College Name",
+                                            event['college'],
+                                          ),
+                                          _buildDetailText(
+                                            "Contact",
+                                            event['contact'],
+                                          ),
+                                          _buildDetailText(
+                                            "Roll Number",
+                                            event['rollNumber'],
+                                          ),
+                                          _buildDetailText(
+                                            "Symposium Name",
+                                            event['symposiumName'],
+                                          ),
+                                          _buildDetailText(
+                                            "Event Type",
+                                            event['eventType'],
+                                          ),
+                                          _buildDetailText(
+                                            "Team or Individual",
+                                            event['teamOrIndividual'],
+                                          ),
+                                          _buildDetailText(
+                                            "Team Members",
+                                            event['teamMembers'],
+                                          ),
+                                          _buildDetailText(
+                                            "Event Date",
+                                            event['eventDate'],
+                                          ),
+                                          _buildDetailText(
+                                            "Event Days Spent",
+                                            event['eventDaysSpent'],
+                                          ),
+                                          _buildDetailText(
+                                            "Prize Amount",
+                                            event['prizeAmount'],
+                                          ),
+                                          _buildDetailText(
+                                            "Position Secured",
+                                            event['positionSecured'],
+                                          ),
+                                          _buildDetailText(
+                                            "Certification Link",
+                                            event['certificationLink'],
+                                          ),
+                                          _buildDetailText(
+                                            "Inter or Intra Event",
+                                            event['interOrIntraEvent'],
+                                          ),
+                                          _buildDetailText(
+                                            "Date Registered",
+                                            event['date'],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                         ),
                       ],
                     ),
@@ -485,52 +463,149 @@ class _ReportState extends State<Report> {
     );
   }
 
-  Widget _buildSummaryCard(String title, String count, IconData icon) {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: Colors.blueAccent),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 8.0,
-                horizontal: 20.0,
-              ),
-              child: Text(
-                count,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent, // Modern color
-                  letterSpacing: 1.2, // Spacing for better readability
-                  fontFamily: 'Montserrat', // Stylish font
-                  shadows: [
-                    Shadow(
-                      color: Colors.black26,
-                      offset: Offset(1, 1),
-                      blurRadius: 1,
+  Widget _buildOverviewDashboard(List<dynamic> events) {
+    final int total = events.length;
+    final int intra =
+        events.where((e) => e['interOrIntraEvent'] == 'Intra').length;
+    final int inter =
+        events.where((e) => e['interOrIntraEvent'] == 'Inter').length;
+    final int top3 =
+        events.where((e) {
+          final pos = int.tryParse(e['positionSecured']?.toString() ?? '');
+          return pos != null && pos <= 3;
+        }).length;
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2196F3), Color(0xFF3F51B5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueAccent.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      "Event Participation Overview",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "$total",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 42,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "Events",
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.insights,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Divider(color: Colors.white24, height: 1),
+          ),
+          Wrap(
+            spacing: 20,
+            runSpacing: 10,
+            alignment: WrapAlignment.spaceAround,
+            children: [
+              _buildMetricItem("Intra", "$intra", Icons.school),
+              _buildMetricItem("Inter", "$inter", Icons.public),
+              _buildMetricItem("Wins", "$top3", Icons.emoji_events),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricItem(String label, String value, IconData icon) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white70, size: 22),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailText(String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Colors.black87, fontSize: 14),
+          children: [
+            TextSpan(
+              text: "$label: ",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            TextSpan(text: value?.toString() ?? "-"),
           ],
         ),
       ),

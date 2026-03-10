@@ -43,17 +43,14 @@ class _UserScreenState extends State<UserScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     await AuthService().logout();
+    if (!mounted) return;
     Navigator.pushReplacementNamed(context, "/login");
-  }
-
-  Future<bool> _onWillPop() async {
-    return false; // Prevent back navigation
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -67,7 +64,10 @@ class _UserScreenState extends State<UserScreen> {
           actions: [
             IconButton(
               onPressed: logout,
-              icon: const Icon(Icons.logout, color: Color.fromARGB(255, 254, 253, 253)),
+              icon: const Icon(
+                Icons.logout,
+                color: Color.fromARGB(255, 254, 253, 253),
+              ),
             ),
           ],
         ),

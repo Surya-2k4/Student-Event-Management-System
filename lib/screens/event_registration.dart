@@ -8,7 +8,7 @@ class EventRegistration extends StatefulWidget {
   const EventRegistration({super.key});
 
   @override
-  _EventRegistrationState createState() => _EventRegistrationState();
+  State<EventRegistration> createState() => _EventRegistrationState();
 }
 
 class _EventRegistrationState extends State<EventRegistration> {
