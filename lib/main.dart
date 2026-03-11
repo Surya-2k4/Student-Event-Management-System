@@ -21,8 +21,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'KEC SEMS',
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1A1C2E),
+          primary: const Color(0xFF1A1C2E),
+          secondary: const Color(0xFF2DD4BF),
+        ),
         useMaterial3: true,
+        fontFamily: 'Inter', // Modern font if available
       ),
       initialRoute: '/splash',
       routes: {

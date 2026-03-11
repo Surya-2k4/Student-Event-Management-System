@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_auth/services/event_services.dart';
 import 'package:flutter_auth/utils/responsive_layout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 class Report extends StatefulWidget {
   const Report({super.key});
@@ -22,30 +19,33 @@ class _ReportState extends State<Report> {
   List<dynamic> events = [];
   List<dynamic> filteredEvents = [];
   bool isLoading = true;
-  String email = "";
-  String userRole = "Student";
+  String userRole = "";
+
+  final Color primaryDark = const Color(0xFF1A1C2E);
+  final Color accentColor = const Color(0xFF2DD4BF);
 
   @override
   void initState() {
     super.initState();
-    loadUserData();
+    _loadUser();
   }
 
-  Future<void> loadUserData() async {
+  Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      email = prefs.getString("email") ?? "";
-      userRole = prefs.getString("role") ?? "Student";
-    });
+    String role = prefs.getString("role")?.toLowerCase() ?? "";
+    setState(() => userRole = role);
+    
+    if (role != "admin") {
+       // Safety check
+       debugPrint("Unauthorized access to reports attempt.");
+    }
     fetchEvents();
   }
 
   Future<void> fetchEvents() async {
     setState(() => isLoading = true);
     try {
-      final fetchedEvents = await EventService().fetchEvents(
-        email: (userRole == "Admin" || userRole == "Staff") ? null : email,
-      );
+      final fetchedEvents = await EventService().fetchEvents();
       setState(() {
         events = fetchedEvents.reversed.toList();
         filteredEvents = events;
@@ -66,48 +66,45 @@ class _ReportState extends State<Report> {
     };
 
     try {
-      final fetchedEvents = await EventService().fetchEvents(
-        email: (userRole == "Admin" || userRole == "Staff") ? null : email,
-        filters: filters,
-      );
-      setState(() {
-        filteredEvents = fetchedEvents;
-      });
+      final fetchedEvents = await EventService().fetchEvents(filters: filters);
+      setState(() => filteredEvents = fetchedEvents);
     } catch (e) {
-      debugPrint("Error filtering: $e");
+      debugPrint("Error: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (userRole.isNotEmpty && userRole != "admin") {
+      return const Scaffold(body: Center(child: Text("Access Restricted to Administrators")));
+    }
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("Participation Reports", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.indigo,
+        title: const Text("Analytical Reports", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: primaryDark,
         elevation: 0,
         actions: [
           IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: fetchEvents),
-          IconButton(icon: const Icon(Icons.download, color: Colors.white), onPressed: _downloadPdf),
+          const SizedBox(width: 10),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ResponsiveLayout(
-              mobile: _buildCompactView(),
-              desktop: _buildWideView(),
+              mobile: _buildMobileView(),
+              desktop: _buildDesktopView(),
             ),
     );
   }
 
-  Widget _buildCompactView() {
+  Widget _buildMobileView() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildOverviewDashboard(events),
-          const SizedBox(height: 20),
-          _buildFilters(crossAxisCount: 1),
+          _buildFilters(isExpanded: true),
           const SizedBox(height: 20),
           _buildResultsList(),
         ],
@@ -115,42 +112,54 @@ class _ReportState extends State<Report> {
     );
   }
 
-  Widget _buildWideView() {
+  Widget _buildDesktopView() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Sidebar Filter
+        // Sidebar Filters
         Container(
-          width: 300,
+          width: 350,
           color: Colors.white,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Filters", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const Divider(),
-                _buildFilters(crossAxisCount: 1),
-                const SizedBox(height: 20),
+                const Text("Record Filters", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+                const Divider(height: 40),
+                _buildFilters(isExpanded: true),
+                const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: filterEvents,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, minimumSize: const Size(double.infinity, 50)),
-                  child: const Text("Apply Filters", style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryDark,
+                    minimumSize: const Size(double.infinity, 55),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text("Apply Query", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
           ),
         ),
-        // Main Content
+        // Results Area
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(30),
-            child: Column(
-              children: [
-                _buildOverviewDashboard(events),
-                const SizedBox(height: 30),
-                _buildResultsList(),
-              ],
+            padding: const EdgeInsets.all(40),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1000),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Search Results", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                    const SizedBox(height: 10),
+                    Text("Showing ${filteredEvents.length} student achievements", style: TextStyle(color: Colors.grey[600])),
+                    const SizedBox(height: 30),
+                    _buildResultsList(),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -158,63 +167,47 @@ class _ReportState extends State<Report> {
     );
   }
 
-  Widget _buildFilters({required int crossAxisCount}) {
+  Widget _buildFilters({required bool isExpanded}) {
     return Column(
       children: [
-        _buildFilterField(searchController, "Symposium Name", Icons.search),
-        _buildFilterField(collegeController, "College Name", Icons.school),
-        _buildFilterField(yearController, "Year", Icons.calendar_today),
-        const SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          value: eventType,
-          decoration: InputDecoration(labelText: "Event Scope", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-          items: ['None', 'Inter', 'Intra'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-          onChanged: (v) => setState(() => eventType = v!),
-        ),
+        _buildInputField(searchController, "Symposium Name", Icons.search),
         const SizedBox(height: 15),
-        DropdownButtonFormField<String>(
-          value: position,
-          decoration: InputDecoration(labelText: "Position Secured", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-          items: ['None', '1', '2', '3'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-          onChanged: (v) => setState(() => position = v!),
-        ),
-        if (crossAxisCount == 1) ...[
-          const SizedBox(height: 20),
-          ElevatedButton(onPressed: filterEvents, child: const Text("Search")),
-        ]
+        _buildInputField(collegeController, "Institution", Icons.account_balance),
+        const SizedBox(height: 15),
+        _buildInputField(yearController, "Batch Year", Icons.calendar_today),
+        const SizedBox(height: 15),
+        _buildDropdown("Scope", eventType, ['None', 'Inter', 'Intra'], (v) => setState(() => eventType = v!)),
+        const SizedBox(height: 15),
+        _buildDropdown("Standing", position, ['None', '1', '2', '3'], (v) => setState(() => position = v!)),
       ],
     );
   }
 
-  Widget _buildOverviewDashboard(List<dynamic> events) {
-    final int total = events.length;
-    final int wins = events.where((e) => ['1','2','3'].contains(e['positionSecured']?.toString())).length;
-
-    return Container(
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Colors.indigo, Colors.indigoAccent]),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStat("Total Participation", "$total", Icons.event),
-          _buildStat("Medals/Wins", "$wins", Icons.emoji_events),
-        ],
+  Widget _buildInputField(TextEditingController ctrl, String label, IconData icon) {
+    return TextField(
+      controller: ctrl,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: primaryDark),
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
       ),
     );
   }
 
-  Widget _buildStat(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white, size: 30),
-        const SizedBox(height: 10),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.white70)),
-      ],
+  Widget _buildDropdown(String label, String value, List<String> items, ValueChanged<String?> onChanged) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+      ),
     );
   }
 
@@ -225,30 +218,39 @@ class _ReportState extends State<Report> {
       itemCount: filteredEvents.length,
       itemBuilder: (context, index) {
         final event = filteredEvents[index];
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 15),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+          ),
           child: ExpansionTile(
-            leading: const CircleAvatar(backgroundColor: Colors.indigo, child: Icon(Icons.star, color: Colors.white)),
-            title: Text(event['eventName'] ?? event['symposiumName'] ?? "Unnamed", style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text("${event['name']} | ${event['eventDate']}"),
+            tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            leading: CircleAvatar(backgroundColor: primaryDark, child: const Icon(Icons.person, color: Colors.white, size: 20)),
+            title: Text(event['name'] ?? "Participant", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            subtitle: Text("${event['eventName']} | ${event['college']}"),
             children: [
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDetailRow("Roll No", event['rollNumber']),
-                    _buildDetailRow("College", event['college']),
-                    _buildDetailRow("Symposium", event['symposiumName']),
-                    _buildDetailRow("Position", event['positionSecured']),
-                    _buildDetailRow("Scope", event['interOrIntraEvent']),
-                    if (event['certificationLink'] != null)
-                      TextButton.icon(onPressed: () {}, icon: const Icon(Icons.link), label: const Text("View Certificate")),
+                    _buildDataRow("Roll Number", event['rollNumber']),
+                    _buildDataRow("Symposium", event['symposiumName']),
+                    _buildDataRow("Position", event['positionSecured']),
+                    _buildDataRow("Date", event['eventDate']),
+                    const SizedBox(height: 15),
+                    if (event['certificationLink'] != null && event['certificationLink'] != "")
+                      ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.visibility),
+                        label: const Text("Review Certificate"),
+                        style: ElevatedButton.styleFrom(backgroundColor: accentColor, foregroundColor: primaryDark),
+                      )
                   ],
                 ),
-              ),
+              )
             ],
           ),
         );
@@ -256,25 +258,13 @@ class _ReportState extends State<Report> {
     );
   }
 
-  Widget _buildDetailRow(String label, dynamic value) {
+  Widget _buildDataRow(String label, dynamic value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(children: [Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)), Text(value?.toString() ?? "-")]),
+      child: Row(children: [
+        Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+        Text(value?.toString() ?? "-", style: const TextStyle(color: Color(0xFF1E293B))),
+      ]),
     );
-  }
-
-  Widget _buildFilterField(TextEditingController controller, String label, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon, color: Colors.indigo), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-      ),
-    );
-  }
-
-  Future<void> _downloadPdf() async {
-     // Placeholder for legacy PDF logic
-     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("PDF generation started...")));
   }
 }

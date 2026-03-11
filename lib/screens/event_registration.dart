@@ -21,20 +21,19 @@ class _EventRegistrationState extends State<EventRegistration> {
   final TextEditingController rollNumberController = TextEditingController();
   final TextEditingController symposiumNameController = TextEditingController();
   final TextEditingController eventTypeController = TextEditingController();
-  final TextEditingController teamOrIndividualController =
-      TextEditingController();
+  final TextEditingController teamOrIndividualController = TextEditingController();
   final TextEditingController teamMembersController = TextEditingController();
   final TextEditingController eventDateController = TextEditingController();
-  final TextEditingController eventDaysSpentController =
-      TextEditingController();
+  final TextEditingController eventDaysSpentController = TextEditingController();
   final TextEditingController prizeAmountController = TextEditingController();
-  final TextEditingController positionSecuredController =
-      TextEditingController();
-  final TextEditingController certificationLinkController =
-      TextEditingController();
+  final TextEditingController positionSecuredController = TextEditingController();
+  final TextEditingController certificationLinkController = TextEditingController();
   String? interOrIntraEvent;
 
   bool isLoading = false;
+
+  final Color primaryDark = const Color(0xFF1A1C2E);
+  final Color accentColor = const Color(0xFF2DD4BF);
 
   @override
   void initState() {
@@ -47,22 +46,20 @@ class _EventRegistrationState extends State<EventRegistration> {
     final email = prefs.getString("email") ?? "";
     final userDetails = await AuthService().fetchUserDetails(email);
     if (userDetails != null) {
-      setState(() {
-        nameController.text = userDetails["name"]!;
-        rollNumberController.text = userDetails["rollNumber"]!;
-        emailController.text = userDetails["email"]!;
-      });
+      if (mounted) {
+        setState(() {
+          nameController.text = userDetails["name"]!;
+          rollNumberController.text = userDetails["rollNumber"]!;
+          emailController.text = userDetails["email"]!;
+        });
+      }
     }
   }
 
   Future<void> registerEvent() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     final eventData = {
       "name": nameController.text,
@@ -85,38 +82,34 @@ class _EventRegistrationState extends State<EventRegistration> {
 
     final success = await EventService().registerEvent(eventData);
 
-    setState(() {
-      isLoading = false;
-    });
+    setState(() => isLoading = false);
 
     if (success) {
-      _showDialog("Event registered successfully!", Colors.green);
+      _showSuccessDialog();
       _clearFields();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to register event."), backgroundColor: Colors.red),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Submission failed. Check your connection."), backgroundColor: Colors.redAccent));
     }
   }
 
-  void _showDialog(String message, Color color) {
+  void _showSuccessDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Success"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, "/user_screen");
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        );
-      },
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Achievement Logged", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text("Your event details have been successfully recorded in the central repository."),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, "/user_screen");
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: primaryDark),
+            child: const Text("Return to Portal", style: TextStyle(color: Colors.white)),
+          )
+        ],
+      ),
     );
   }
 
@@ -136,38 +129,23 @@ class _EventRegistrationState extends State<EventRegistration> {
     setState(() => interOrIntraEvent = null);
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        eventDateController.text = "${picked.toLocal()}".split(' ')[0];
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("Register Achievement", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.indigo,
+        title: const Text("New Achievement", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: primaryDark,
         elevation: 0,
-        centerTitle: true,
       ),
       body: ResponsiveLayout(
-        mobile: _buildForm(padding: 16, crossAxisCount: 1),
-        desktop: _buildForm(padding: 40, crossAxisCount: 2),
+        mobile: _buildFormView(padding: 20, gridCols: 1),
+        desktop: _buildFormView(padding: 40, gridCols: 2),
       ),
     );
   }
 
-  Widget _buildForm({required double padding, required int crossAxisCount}) {
+  Widget _buildFormView({required double padding, required int gridCols}) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(padding),
       child: Center(
@@ -177,48 +155,49 @@ class _EventRegistrationState extends State<EventRegistration> {
             key: _formKey,
             child: Column(
               children: [
-                _buildHeader(),
+                _buildSectionHeading("Technical Details", "Provide the core information about the event"),
                 const SizedBox(height: 30),
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: 0,
-                  crossAxisSpacing: 20,
-                  childAspectRatio: crossAxisCount == 1 ? 3.5 : 5,
+                  crossAxisCount: gridCols,
+                  mainAxisSpacing: 15,
+                  crossAxisSpacing: 25,
+                  childAspectRatio: gridCols == 1 ? 4 : 5.5,
                   children: [
-                    _buildInputField(nameController, "Full Name", Icons.person, readOnly: true),
-                    _buildInputField(emailController, "Email", Icons.email, readOnly: true),
-                    _buildInputField(rollNumberController, "Roll Number", Icons.confirmation_number, readOnly: true),
-                    _buildInputField(contactController, "Contact Number", Icons.phone, keyboardType: TextInputType.phone),
-                    _buildInputField(collegeController, "College/Institution", Icons.school),
-                    _buildInputField(symposiumNameController, "Symposium Name", Icons.event_note),
-                    _buildInputField(eventNameController, "Event Name", Icons.event),
-                    _buildInputField(eventTypeController, "Event Category", Icons.category),
-                    _buildInputField(teamOrIndividualController, "Team Size/Type", Icons.group),
-                    _buildInputField(teamMembersController, "Team Members", Icons.people),
-                    _buildDateInputField(eventDateController, "Event Date", Icons.date_range, context),
-                    _buildInputField(eventDaysSpentController, "Days Involved", Icons.timer, keyboardType: TextInputType.number),
-                    _buildInputField(prizeAmountController, "Prize/Cash Award", Icons.attach_money, keyboardType: TextInputType.number),
-                    _buildInputField(positionSecuredController, "Position (1st/2nd...)", Icons.emoji_events),
-                    _buildInputField(certificationLinkController, "Certificate URL", Icons.link),
-                    _buildDropdownField("Event Scope", Icons.public, (v) => setState(() => interOrIntraEvent = v), interOrIntraEvent, ["Inter", "Intra"]),
+                    _buildInput(nameController, "Participant Name", Icons.person_outline, readOnly: true),
+                    _buildInput(emailController, "Institutional Email", Icons.email_outlined, readOnly: true),
+                    _buildInput(rollNumberController, "Roll ID", Icons.badge_outlined, readOnly: true),
+                    _buildInput(contactController, "Contact Number", Icons.phone_outlined),
+                    _buildInput(collegeController, "Institution Name", Icons.account_balance_outlined),
+                    _buildInput(symposiumNameController, "Symposium Title", Icons.event_note_outlined),
+                    _buildInput(eventNameController, "Specific Event", Icons.emoji_events_outlined),
+                    _buildInput(eventTypeController, "Event Category", Icons.category_outlined),
+                    _buildInput(teamOrIndividualController, "Entry Type", Icons.groups_outlined),
+                    _buildInput(teamMembersController, "Team Members (if any)", Icons.people_outline),
+                    _buildDateInput(),
+                    _buildInput(eventDaysSpentController, "Duration (Days)", Icons.timer_outlined, isNumber: true),
+                    _buildInput(prizeAmountController, "Award Amount", Icons.currency_rupee, isNumber: true),
+                    _buildInput(positionSecuredController, "Rank/Position", Icons.stars_outlined),
+                    _buildInput(certificationLinkController, "Credential URL", Icons.link_rounded),
+                    _buildDropdown("Participation Scope", interOrIntraEvent, ['Inter', 'Intra'], (v) => setState(() => interOrIntraEvent = v)),
                   ],
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 50),
                 isLoading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: registerEvent,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo,
-                          minimumSize: const Size(300, 60),
+                          backgroundColor: primaryDark,
+                          minimumSize: const Size(400, 65),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                          elevation: 5,
+                          elevation: 8,
+                          shadowColor: primaryDark.withOpacity(0.3),
                         ),
-                        child: const Text("Submit Registration", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: const Text("Log Achievement", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                       ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -227,88 +206,65 @@ class _EventRegistrationState extends State<EventRegistration> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildSectionHeading(String title, String sub) {
     return Column(
       children: [
-        Icon(Icons.assignment_turned_in, size: 50, color: Colors.indigo.withOpacity(0.8)),
-        const SizedBox(height: 10),
-        const Text("Event Details", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        const Text("Please fill in all the details of your achievement", style: TextStyle(color: Colors.grey)),
+        Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+        const SizedBox(height: 5),
+        Text(sub, style: TextStyle(color: Colors.grey[500])),
       ],
     );
   }
 
-  Widget _buildInputField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    TextInputType keyboardType = TextInputType.text,
-    bool readOnly = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        readOnly: readOnly,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.indigo),
-          filled: true,
-          fillColor: readOnly ? Colors.grey[100] : Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        validator: (v) => v!.isEmpty ? "Required" : null,
+  Widget _buildInput(TextEditingController ctrl, String label, IconData icon, {bool readOnly = false, bool isNumber = false}) {
+    return TextFormField(
+      controller: ctrl,
+      readOnly: readOnly,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: primaryDark, size: 20),
+        filled: true,
+        fillColor: readOnly ? const Color(0xFFF1F5F9) : Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
       ),
+      validator: (v) => v!.isEmpty ? "Required" : null,
     );
   }
 
-  Widget _buildDateInputField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-    BuildContext context,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        readOnly: true,
-        onTap: () => _selectDate(context),
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.indigo),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        validator: (v) => v!.isEmpty ? "Required" : null,
+  Widget _buildDateInput() {
+    return TextFormField(
+      controller: eventDateController,
+      readOnly: true,
+      onTap: () async {
+        final d = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime(2100));
+        if (d != null) setState(() => eventDateController.text = d.toIso8601String().split('T')[0]);
+      },
+      decoration: InputDecoration(
+        labelText: "Event Date",
+        prefixIcon: Icon(Icons.calendar_month_outlined, color: primaryDark, size: 20),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
       ),
+      validator: (v) => v!.isEmpty ? "Required" : null,
     );
   }
 
-  Widget _buildDropdownField(
-    String label,
-    IconData icon,
-    ValueChanged<String?> onChanged,
-    String? value,
-    List<String> items,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: value,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.indigo),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
-        validator: (v) => v == null ? "Required" : null,
+  Widget _buildDropdown(String label, String? value, List<String> items, ValueChanged<String?> onChanged) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      onChanged: onChanged,
+      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(Icons.public_rounded, color: primaryDark, size: 20),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
       ),
+      validator: (v) => v == null ? "Required" : null,
     );
   }
 }

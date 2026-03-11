@@ -16,6 +16,9 @@ class _ViewEventsState extends State<ViewEvents> {
   String userRole = "Student";
   String email = "";
 
+  final Color primaryDark = const Color(0xFF1A1C2E);
+  final Color accentColor = const Color(0xFF2DD4BF);
+
   @override
   void initState() {
     super.initState();
@@ -26,7 +29,7 @@ class _ViewEventsState extends State<ViewEvents> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       email = prefs.getString("email") ?? "";
-      userRole = prefs.getString("role") ?? "Student";
+      userRole = prefs.getString("role")?.toLowerCase() ?? "student";
     });
     _fetchEvents();
   }
@@ -35,7 +38,7 @@ class _ViewEventsState extends State<ViewEvents> {
     setState(() => isLoading = true);
     try {
       final fetched = await EventService().fetchEvents(
-        email: (userRole == "Admin" || userRole == "Staff") ? null : email,
+        email: (userRole == "admin" || userRole == "staff") ? null : email,
       );
       setState(() {
         events = fetched.reversed.toList();
@@ -49,13 +52,14 @@ class _ViewEventsState extends State<ViewEvents> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("Achievement Records", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.indigo,
+        title: const Text("Achievement Archive", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: primaryDark,
         elevation: 0,
         actions: [
-           IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _fetchEvents),
+          IconButton(icon: const Icon(Icons.refresh_rounded, color: Colors.white), onPressed: _fetchEvents),
+          const SizedBox(width: 10),
         ],
       ),
       body: isLoading
@@ -74,9 +78,11 @@ class _ViewEventsState extends State<ViewEvents> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.event_busy, size: 80, color: Colors.grey[300]),
+          Icon(Icons.folder_off_outlined, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 20),
-          const Text("No registrations found", style: TextStyle(fontSize: 18, color: Colors.grey)),
+          const Text("No achievement records found", style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 10),
+          Text("Try refreshing or add a new event", style: TextStyle(color: Colors.grey[400])),
         ],
       ),
     );
@@ -84,72 +90,98 @@ class _ViewEventsState extends State<ViewEvents> {
 
   Widget _buildList({required int crossAxisCount}) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Text("Showing ${events.length} records", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      padding: const EdgeInsets.all(30),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Summary of Records (${events.length})", style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 24, color: Color(0xFF1E293B))),
+              const SizedBox(height: 25),
+              if (crossAxisCount == 1)
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: events.length,
+                  itemBuilder: (context, index) => _buildEventCard(events[index]),
+                )
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    childAspectRatio: 1.6,
+                  ),
+                  itemCount: events.length,
+                  itemBuilder: (context, index) => _buildEventCard(events[index]),
+                ),
+            ],
           ),
-          if (crossAxisCount == 1)
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: events.length,
-              itemBuilder: (context, index) => _buildEventCard(events[index]),
-            )
-          else
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                childAspectRatio: 1.5,
-              ),
-              itemCount: events.length,
-              itemBuilder: (context, index) => _buildEventCard(events[index]),
-            ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildEventCard(dynamic event) {
-    final String title = event['eventName'] ?? event['symposiumName'] ?? "Event";
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+    final String title = event['eventName'] ?? event['symposiumName'] ?? "Achievement";
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey[100]!),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
       child: ExpansionTile(
-        leading: CircleAvatar(backgroundColor: Colors.indigo, child: Text(title[0].toUpperCase(), style: const TextStyle(color: Colors.white))),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("${event['college']} | ${event['eventDate']}"),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: primaryDark.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
+          child: Icon(Icons.workspace_premium_outlined, color: primaryDark, size: 24),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF1E293B))),
+        subtitle: Text("${event['college']} | ${event['eventDate']}", style: TextStyle(color: Colors.grey[500])),
+        iconColor: primaryDark,
         children: [
-           Padding(
-             padding: const EdgeInsets.all(16),
-             child: Column(
-               crossAxisAlignment: CrossAxisAlignment.start,
-               children: [
-                 _buildDetail("Participant", event['name']),
-                 _buildDetail("Roll No", event['rollNumber']),
-                 _buildDetail("Event Type", event['eventType']),
-                 _buildDetail("Position", event['positionSecured']),
-                 _buildDetail("Inter/Intra", event['interOrIntraEvent']),
-                 if (event['certificationLink'] != null && event['certificationLink'].toString().isNotEmpty)
-                    TextButton.icon(onPressed: () {}, icon: const Icon(Icons.link), label: const Text("View Certificate")),
-               ],
-             ),
-           )
+          Padding(
+            padding: const EdgeInsets.fromLTRB(25, 10, 25, 25),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailRow("Participant", event['name']),
+                _buildDetailRow("Roll Number", event['rollNumber']),
+                _buildDetailRow("Category", event['eventType']),
+                _buildDetailRow("Standing", event['positionSecured']),
+                _buildDetailRow("Scope", event['interOrIntraEvent']),
+                const SizedBox(height: 20),
+                if (event['certificationLink'] != null && event['certificationLink'].toString().isNotEmpty)
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.link_rounded, size: 18),
+                    label: const Text("Certificate Proof"),
+                    style: ElevatedButton.styleFrom(backgroundColor: accentColor, foregroundColor: primaryDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  ),
+              ],
+            ),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildDetail(String label, dynamic value) {
+  Widget _buildDetailRow(String label, dynamic value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(children: [Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)), Text(value?.toString() ?? "-")]),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey, fontSize: 14)),
+          Text(value?.toString() ?? "-", style: const TextStyle(color: Color(0xFF1E293B), fontSize: 14)),
+        ],
+      ),
     );
   }
 }

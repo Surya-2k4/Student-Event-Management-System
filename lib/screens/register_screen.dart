@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/services/auth_services.dart';
 import 'package:flutter_auth/utils/responsive_layout.dart';
-import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,11 +18,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final AuthService authService = AuthService();
   bool isLoading = false;
 
+  final Color primaryDark = const Color(0xFF1A1C2E);
+  final Color accentColor = const Color(0xFF2DD4BF);
+
   void register() async {
     if (!_formKey.currentState!.validate()) return;
     
-    // Allow both kongu domains
-    if (!emailController.text.endsWith('@kongu.edu') && !emailController.text.endsWith('@kongu.ac.in')) {
+    if (!emailController.text.trim().endsWith('@kongu.edu') && !emailController.text.trim().endsWith('@kongu.ac.in')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please use your institutional @kongu.edu or @kongu.ac.in email")),
       );
@@ -32,9 +33,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => isLoading = true);
     String? error = await authService.register(
-      nameController.text,
-      rollNumberController.text,
-      emailController.text,
+      nameController.text.trim(),
+      rollNumberController.text.trim(),
+      emailController.text.trim(),
       passwordController.text,
     );
     setState(() => isLoading = false);
@@ -50,16 +51,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _showSuccessDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("Success"),
-        content: const Text("Account created! You can now log in."),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Success", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text("Your student account has been established. You may now authenticate."),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.pushReplacementNamed(context, "/login");
             },
-            child: const Text("Login Now"),
+            style: ElevatedButton.styleFrom(backgroundColor: primaryDark),
+            child: const Text("Proceed to Login", style: TextStyle(color: Colors.white)),
           )
         ],
       ),
@@ -79,15 +83,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildCompactView() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(30),
       child: Center(
-        child: Column(
-          children: [
-            const SizedBox(height: 50),
-            _buildBrand(),
-            const SizedBox(height: 40),
-            _buildForm(),
-          ],
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            children: [
+              const SizedBox(height: 50),
+              _buildHeading(),
+              const SizedBox(height: 40),
+              _buildForm(),
+            ],
+          ),
         ),
       ),
     );
@@ -96,29 +103,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildWideView() {
     return Row(
       children: [
+        // Sidebar Branding
         Expanded(
           flex: 1,
           child: Container(
-            color: Colors.indigo,
+            color: primaryDark,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.school, size: 100, color: Colors.white),
-                const SizedBox(height: 20),
-                const Text("KEC SEMS", style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
-                const Text("Join our achievement network", style: TextStyle(color: Colors.white70, fontSize: 18)),
+                const Icon(Icons.rocket_launch_outlined, size: 80, color: Color(0xFF2DD4BF)),
+                const SizedBox(height: 30),
+                const Text("Join KEC SEMS", style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                  child: Text("Register to document your achievements and track your professional growth within the institution.", 
+                    textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 16)),
+                ),
               ],
             ),
           ),
         ),
+        // Form Content
         Expanded(
           flex: 1,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(60.0),
-            child: Center(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 40),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: _buildForm(),
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Create Account", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                    const Text("Start your achievement journey today", style: TextStyle(color: Colors.grey, fontSize: 16)),
+                    const SizedBox(height: 40),
+                    _buildForm(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -127,16 +148,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildBrand() {
+  Widget _buildHeading() {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.indigo.withOpacity(0.1), shape: BoxShape.circle),
-          child: const Icon(Icons.person_add, size: 50, color: Colors.indigo),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(color: primaryDark.withOpacity(0.05), shape: BoxShape.circle),
+          child: Icon(Icons.person_add_rounded, size: 50, color: primaryDark),
         ),
-        const SizedBox(height: 20),
-        const Text("Student Registration", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 15),
+        const Text("Student Registration", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
       ],
     );
   }
@@ -146,44 +167,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
       key: _formKey,
       child: Column(
         children: [
-          _buildTextField(nameController, "Full Name", Icons.person),
+          _buildInput(nameController, "Full Legal Name", Icons.person_outline),
           const SizedBox(height: 15),
-          _buildTextField(rollNumberController, "Roll Number", Icons.badge),
+          _buildInput(rollNumberController, "Roll Number/ID", Icons.badge_outlined),
           const SizedBox(height: 15),
-          _buildTextField(emailController, "Institutional Email", Icons.email),
+          _buildInput(emailController, "Institutional Email", Icons.email_outlined),
           const SizedBox(height: 15),
-          _buildTextField(passwordController, "Password", Icons.lock, isPassword: true),
-          const SizedBox(height: 30),
+          _buildInput(passwordController, "Strong Password", Icons.lock_outline, isPass: true),
+          const SizedBox(height: 35),
           isLoading
               ? const CircularProgressIndicator()
               : ElevatedButton(
                   onPressed: register,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
-                    minimumSize: const Size(double.infinity, 55),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: primaryDark,
+                    minimumSize: const Size(double.infinity, 60),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   ),
-                  child: const Text("Create Account", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text("Complete Registration", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
+          const SizedBox(height: 15),
           TextButton(
             onPressed: () => Navigator.pushReplacementNamed(context, "/login"),
-            child: const Text("Already have an account? Login", style: TextStyle(color: Colors.indigo)),
+            child: Text("Already registered? Login", style: TextStyle(color: primaryDark, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool isPassword = false}) {
+  Widget _buildInput(TextEditingController ctrl, String label, IconData icon, {bool isPass = false}) {
     return TextFormField(
-      controller: controller,
-      obscureText: isPassword,
+      controller: ctrl,
+      obscureText: isPass,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.indigo),
+        prefixIcon: Icon(icon, color: primaryDark),
         filled: true,
-        fillColor: Colors.grey[50],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey[200]!)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey[200]!)),
       ),
       validator: (v) => v!.isEmpty ? "Required" : null,
     );
