@@ -1,6 +1,6 @@
 class AppConfig {
   static const String baseUrl =
-      "https://student-event-management-backend.onrender.com";
+      "https://student-event-management-backend.onrender.com/api";
 
   // Endpoints
   static const String login = "$baseUrl/auth/login";
