@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/services/auth_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'user_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,26 +19,23 @@ class _LoginScreenState extends State<LoginScreen> {
     String email = emailController.text;
     String password = passwordController.text;
 
-    // Validate email format
-    if (!email.endsWith('@kongu.edu') && !email.endsWith('@kongu.ac.in')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Email must be in the format @kongu.edu or @kongu.ac.in',
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
+    // Optional: Keep some validation but allow the new admin domain
+    if (email.isEmpty || password.isEmpty) return;
 
     String? error = await authService.login(email, password);
     if (!mounted) return;
     if (error == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => UserScreen()),
-      );
+      final prefs = await SharedPreferences.getInstance();
+      final role = prefs.getString("role") ?? "Student";
+
+      if (role == "Admin" || role == "Staff") {
+        Navigator.pushReplacementNamed(context, "/admin");
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => UserScreen()),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.redAccent),

@@ -7,15 +7,15 @@ exports.register = async (req, res) => {
     const { name, rollNumber, email, password } = req.body;
 
     // Check existing
-    const userCheck = await db.query('SELECT * FROM users WHERE email = $1 OR roll_number = $2', [email, rollNumber]);
+    const userCheck = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userCheck.rows.length > 0) {
-      return res.status(400).json({ message: "Email or Roll number already exists" });
+      return res.status(400).json({ message: "Email already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await db.query(
-      'INSERT INTO users (name, roll_number, email, password) VALUES ($1, $2, $3, $4) RETURNING id, name, email, roll_number',
-      [name, rollNumber, email, hashedPassword]
+      'INSERT INTO users (name, roll_number, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, roll_number, role',
+      [name, rollNumber, email, hashedPassword, 'Student']
     );
 
     res.status(201).json({ message: "User Registered", user: result.rows[0] });
@@ -40,7 +40,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid Credentials" });
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "24h" });
     
     // Don't send password back
     const { password: _, ...userWithoutPassword } = user;
@@ -51,10 +51,31 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.createStaff = async (req, res) => {
+  try {
+    if (req.user.role !== 'Admin') {
+      return res.status(403).json({ message: "Only Admin can create staff logins" });
+    }
+
+    const { name, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    await db.query(
+      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)',
+      [name, email, hashedPassword, 'Staff']
+    );
+    
+    res.status(201).json({ message: "Staff created successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.getUser = async (req, res) => {
   try {
     const { email } = req.query;
-    const result = await db.query('SELECT name, roll_number as "rollNumber", email FROM users WHERE email = $1', [email]);
+    const result = await db.query('SELECT name, roll_number as "rollNumber", email, role FROM users WHERE email = $1', [email]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "User not found" });

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_auth/services/auth_services.dart';
 import 'package:flutter_auth/services/event_services.dart';
+import 'package:flutter_auth/utils/responsive_layout.dart';
 
 class EventRegistration extends StatefulWidget {
   const EventRegistration({super.key});
@@ -92,18 +93,10 @@ class _EventRegistrationState extends State<EventRegistration> {
       _showDialog("Event registered successfully!", Colors.green);
       _clearFields();
     } else {
-      _showMessage("Failed to register event. Please check your connection or token.", Colors.red);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to register event."), backgroundColor: Colors.red),
+      );
     }
-  }
-
-  void _showMessage(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: color,
-        duration: const Duration(seconds: 3),
-      ),
-    );
   }
 
   void _showDialog(String message, Color color) {
@@ -111,18 +104,15 @@ class _EventRegistrationState extends State<EventRegistration> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Registration Status"),
+          title: const Text("Success"),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close the dialog
-                Navigator.pushReplacementNamed(
-                  context,
-                  "/user_screen",
-                ); // Navigate back to user screen
+                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, "/user_screen");
               },
-              child: Text("OK"),
+              child: const Text("OK"),
             ),
           ],
         );
@@ -131,12 +121,9 @@ class _EventRegistrationState extends State<EventRegistration> {
   }
 
   void _clearFields() {
-    nameController.clear();
-    emailController.clear();
     eventNameController.clear();
     collegeController.clear();
     contactController.clear();
-    rollNumberController.clear();
     symposiumNameController.clear();
     eventTypeController.clear();
     teamOrIndividualController.clear();
@@ -146,7 +133,7 @@ class _EventRegistrationState extends State<EventRegistration> {
     prizeAmountController.clear();
     positionSecuredController.clear();
     certificationLinkController.clear();
-    interOrIntraEvent = null;
+    setState(() => interOrIntraEvent = null);
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -166,165 +153,72 @@ class _EventRegistrationState extends State<EventRegistration> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, "/user_screen");
-          },
-        ),
-        title: const Text(
-          "Event Registration",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        backgroundColor: Colors.blueAccent,
+        title: const Text("Register Achievement", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.indigo,
+        elevation: 0,
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
+      body: ResponsiveLayout(
+        mobile: _buildForm(padding: 16, crossAxisCount: 1),
+        desktop: _buildForm(padding: 40, crossAxisCount: 2),
+      ),
+    );
+  }
+
+  Widget _buildForm({required double padding, required int crossAxisCount}) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(padding),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInputField(nameController, "Full Name", Icons.person),
-                _buildInputField(emailController, "Email", Icons.email),
-                _buildInputField(
-                  collegeController,
-                  "College Name",
-                  Icons.school,
+                _buildHeader(),
+                const SizedBox(height: 30),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 0,
+                  crossAxisSpacing: 20,
+                  childAspectRatio: crossAxisCount == 1 ? 3.5 : 5,
+                  children: [
+                    _buildInputField(nameController, "Full Name", Icons.person, readOnly: true),
+                    _buildInputField(emailController, "Email", Icons.email, readOnly: true),
+                    _buildInputField(rollNumberController, "Roll Number", Icons.confirmation_number, readOnly: true),
+                    _buildInputField(contactController, "Contact Number", Icons.phone, keyboardType: TextInputType.phone),
+                    _buildInputField(collegeController, "College/Institution", Icons.school),
+                    _buildInputField(symposiumNameController, "Symposium Name", Icons.event_note),
+                    _buildInputField(eventNameController, "Event Name", Icons.event),
+                    _buildInputField(eventTypeController, "Event Category", Icons.category),
+                    _buildInputField(teamOrIndividualController, "Team Size/Type", Icons.group),
+                    _buildInputField(teamMembersController, "Team Members", Icons.people),
+                    _buildDateInputField(eventDateController, "Event Date", Icons.date_range, context),
+                    _buildInputField(eventDaysSpentController, "Days Involved", Icons.timer, keyboardType: TextInputType.number),
+                    _buildInputField(prizeAmountController, "Prize/Cash Award", Icons.attach_money, keyboardType: TextInputType.number),
+                    _buildInputField(positionSecuredController, "Position (1st/2nd...)", Icons.emoji_events),
+                    _buildInputField(certificationLinkController, "Certificate URL", Icons.link),
+                    _buildDropdownField("Event Scope", Icons.public, (v) => setState(() => interOrIntraEvent = v), interOrIntraEvent, ["Inter", "Intra"]),
+                  ],
                 ),
-                _buildInputField(
-                  contactController,
-                  "Contact Number",
-                  Icons.phone,
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Contact number is required';
-                    } else if (value.length != 10) {
-                      return 'Contact number should be 10 digits';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  rollNumberController,
-                  "Roll Number",
-                  Icons.confirmation_number,
-                ),
-                _buildInputField(
-                  symposiumNameController,
-                  "Symposium Name",
-                  Icons.event_note,
-                ),
-                _buildInputField(
-                  eventNameController,
-                  "Event Name",
-                  Icons.event,
-                ),
-                _buildInputField(
-                  eventTypeController,
-                  "Event Type",
-                  Icons.category,
-                ),
-                _buildInputField(
-                  teamOrIndividualController,
-                  "Team or Individual",
-                  Icons.group,
-                ),
-                _buildInputField(
-                  teamMembersController,
-                  "Team Members Name",
-                  Icons.people,
-                ),
-                _buildDateInputField(
-                  eventDateController,
-                  "Event Date",
-                  Icons.date_range,
-                  context,
-                ),
-                _buildInputField(
-                  eventDaysSpentController,
-                  "Event Days Spent",
-                  Icons.timer,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Event days spent is required';
-                    } else if (int.tryParse(value) == null) {
-                      return 'Event days spent should be a number';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  prizeAmountController,
-                  "Prize Amount",
-                  Icons.attach_money,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Prize amount is required';
-                    } else if (int.tryParse(value) == null) {
-                      return 'Prize amount should be a number';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  positionSecuredController,
-                  "Position Secured",
-                  Icons.emoji_events,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Position secured is required';
-                    } else if (int.tryParse(value) == null) {
-                      return 'Position secured should be a number';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  certificationLinkController,
-                  "Certification Link",
-                  Icons.link,
-                ),
-                _buildDropdownField(
-                  "Inter & Intra Event",
-                  Icons.event,
-                  (value) {
-                    setState(() {
-                      interOrIntraEvent = value;
-                    });
-                  },
-                  interOrIntraEvent,
-                  ["Inter", "Intra"],
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 40),
                 isLoading
-                    ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.deepPurpleAccent,
-                      ),
-                    )
+                    ? const CircularProgressIndicator()
                     : ElevatedButton(
-                      onPressed: registerEvent,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                        onPressed: registerEvent,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          minimumSize: const Size(300, 60),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          elevation: 5,
                         ),
+                        child: const Text("Submit Registration", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                       ),
-                      child: const Text(
-                        "Register",
-                        style: TextStyle(fontSize: 18, color: Colors.black),
-                      ),
-                    ),
+                const SizedBox(height: 50),
               ],
             ),
           ),
@@ -333,39 +227,38 @@ class _EventRegistrationState extends State<EventRegistration> {
     );
   }
 
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Icon(Icons.assignment_turned_in, size: 50, color: Colors.indigo.withOpacity(0.8)),
+        const SizedBox(height: 10),
+        const Text("Event Details", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        const Text("Please fill in all the details of your achievement", style: TextStyle(color: Colors.grey)),
+      ],
+    );
+  }
+
   Widget _buildInputField(
     TextEditingController controller,
     String label,
     IconData icon, {
     TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
+    bool readOnly = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
+        readOnly: readOnly,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.black),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Colors.black),
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
+          prefixIcon: Icon(icon, color: Colors.indigo),
           filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          errorStyle: const TextStyle(color: Colors.red),
+          fillColor: readOnly ? Colors.grey[100] : Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        validator:
-            validator ??
-            (value) {
-              if (value == null || value.isEmpty) {
-                return '$label is required';
-              }
-              return null;
-            },
+        validator: (v) => v!.isEmpty ? "Required" : null,
       ),
     );
   }
@@ -377,30 +270,19 @@ class _EventRegistrationState extends State<EventRegistration> {
     BuildContext context,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
         readOnly: true,
         onTap: () => _selectDate(context),
-        style: const TextStyle(color: Colors.black),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Colors.black),
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
+          prefixIcon: Icon(icon, color: Colors.indigo),
           filled: true,
           fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          errorStyle: const TextStyle(color: Colors.red),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return '$label is required';
-          }
-          return null;
-        },
+        validator: (v) => v!.isEmpty ? "Required" : null,
       ),
     );
   }
@@ -413,32 +295,19 @@ class _EventRegistrationState extends State<EventRegistration> {
     List<String> items,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: DropdownButtonFormField<String>(
         value: value,
         onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Colors.black),
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
+          prefixIcon: Icon(icon, color: Colors.indigo),
           filled: true,
           fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          errorStyle: const TextStyle(color: Colors.red),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items:
-            items.map((String item) {
-              return DropdownMenuItem<String>(value: item, child: Text(item));
-            }).toList(),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return '$label is required';
-          }
-          return null;
-        },
+        items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
+        validator: (v) => v == null ? "Required" : null,
       ),
     );
   }

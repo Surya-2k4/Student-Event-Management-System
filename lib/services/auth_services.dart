@@ -53,10 +53,31 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", data["token"]);
       await prefs.setString("email", data["user"]["email"]);
+      await prefs.setString("role", data["user"]["role"]);
       await prefs.setInt("userId", data["user"]["id"]); // Save ID for updates
       return null; // Success
     } else {
       return data["message"]; // Return error message
+    }
+  }
+
+  // Create Staff (Admin only)
+  Future<String?> createStaff(String name, String email, String password) async {
+    final response = await http.post(
+      Uri.parse("${AppConfig.baseUrl}/auth/create-staff"),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        "name": name,
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 201) {
+      return null; // Success
+    } else {
+      return data["message"];
     }
   }
 
@@ -73,6 +94,7 @@ class AuthService {
         "name": data["name"] ?? "",
         "rollNumber": data["rollNumber"] ?? "",
         "email": data["email"] ?? "",
+        "role": data["role"] ?? "Student",
       };
     } else {
       return null;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/services/auth_services.dart';
+import 'package:flutter_auth/utils/responsive_layout.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -10,248 +11,181 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController rollNumberController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final AuthService authService = AuthService();
+  bool isLoading = false;
 
   void register() async {
-    if (!emailController.text.endsWith('@kongu.edu')) {
+    if (!_formKey.currentState!.validate()) return;
+    
+    // Allow both kongu domains
+    if (!emailController.text.endsWith('@kongu.edu') && !emailController.text.endsWith('@kongu.ac.in')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gmail must be in the format of @kongu.edu")),
+        const SnackBar(content: Text("Please use your institutional @kongu.edu or @kongu.ac.in email")),
       );
       return;
     }
 
+    setState(() => isLoading = true);
     String? error = await authService.register(
       nameController.text,
       rollNumberController.text,
       emailController.text,
       passwordController.text,
     );
+    setState(() => isLoading = false);
+
     if (!mounted) return;
     if (error == null) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Registration Successful"),
-            content: Text(
-              "Welcome, ${nameController.text}! You have been registered successfully.",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
-                  ); // Go back to login
-                },
-                child: Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
+      _showSuccessDialog();
     } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Registration Failed"),
-            content: Text(error),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                },
-                child: Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.redAccent));
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Success"),
+        content: const Text("Account created! You can now log in."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, "/login");
+            },
+            child: const Text("Login Now"),
+          )
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200], // Light-themed background
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 400),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Rectangular Image with Stylish Border
-                  Container(
-                    width: 250,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.5),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        'assets/mca.png', // Make sure you add an image to assets
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // KEC SEMS Text
-                  const Text(
-                    "KEC_SEMS",
-                    style: TextStyle(
-                      fontSize: 20, // Slightly larger for emphasis
-                      fontWeight: FontWeight.w900, // Extra bold for impact
-                      color: Colors.blueAccent,
-                      letterSpacing: 1.5, // Adds spacing for a premium look
-                      wordSpacing: 2, // More spacing between words
-                      fontFamily: 'Roboto', // Custom font for a modern touch
-                      shadows: [
-                        Shadow(
-                          color: Colors.black26, // Subtle text shadow
-                          offset: Offset(2, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                  ),
+      backgroundColor: Colors.white,
+      body: ResponsiveLayout(
+        mobile: _buildCompactView(),
+        desktop: _buildWideView(),
+      ),
+    );
+  }
 
-                  const SizedBox(height: 20),
-                  // Welcome Text
-                  const Text(
-                    "Create an Account",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "Register to get started",
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 30),
-                  // Name Field
-                  _buildTextField(
-                    controller: nameController,
-                    label: "Name",
-                    icon: Icons.person_outline,
-                  ),
-                  const SizedBox(height: 15),
-                  // Roll Number Field
-                  _buildTextField(
-                    controller: rollNumberController,
-                    label: "Roll Number",
-                    icon: Icons.confirmation_number_outlined,
-                  ),
-                  const SizedBox(height: 15),
-                  // Email Field
-                  _buildTextField(
-                    controller: emailController,
-                    label: "Gmail",
-                    icon: Icons.email_outlined,
-                  ),
-                  const SizedBox(height: 15),
-                  // Password Field
-                  _buildTextField(
-                    controller: passwordController,
-                    label: "Password",
-                    icon: Icons.lock_outline,
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 25),
-                  // Register Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: register,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        "Register",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  // Login Link
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                      );
-                    },
-                    child: const Text(
-                      "Already have an account? Login",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+  Widget _buildCompactView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: Column(
+          children: [
+            const SizedBox(height: 50),
+            _buildBrand(),
+            const SizedBox(height: 40),
+            _buildForm(),
+          ],
         ),
       ),
     );
   }
 
-  // 🎨 Custom TextField with modern styling
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscureText = false,
-  }) {
-    return TextField(
+  Widget _buildWideView() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: Container(
+            color: Colors.indigo,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.school, size: 100, color: Colors.white),
+                const SizedBox(height: 20),
+                const Text("KEC SEMS", style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+                const Text("Join our achievement network", style: TextStyle(color: Colors.white70, fontSize: 18)),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(60.0),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: _buildForm(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBrand() {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.indigo.withOpacity(0.1), shape: BoxShape.circle),
+          child: const Icon(Icons.person_add, size: 50, color: Colors.indigo),
+        ),
+        const SizedBox(height: 20),
+        const Text("Student Registration", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          _buildTextField(nameController, "Full Name", Icons.person),
+          const SizedBox(height: 15),
+          _buildTextField(rollNumberController, "Roll Number", Icons.badge),
+          const SizedBox(height: 15),
+          _buildTextField(emailController, "Institutional Email", Icons.email),
+          const SizedBox(height: 15),
+          _buildTextField(passwordController, "Password", Icons.lock, isPassword: true),
+          const SizedBox(height: 30),
+          isLoading
+              ? const CircularProgressIndicator()
+              : ElevatedButton(
+                  onPressed: register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    minimumSize: const Size(double.infinity, 55),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text("Create Account", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+          TextButton(
+            onPressed: () => Navigator.pushReplacementNamed(context, "/login"),
+            child: const Text("Already have an account? Login", style: TextStyle(color: Colors.indigo)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool isPassword = false}) {
+    return TextFormField(
       controller: controller,
-      obscureText: obscureText,
-      style: TextStyle(fontSize: 16),
+      obscureText: isPassword,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.blueAccent),
+        prefixIcon: Icon(icon, color: Colors.indigo),
         filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 14,
-          horizontal: 16,
-        ),
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      validator: (v) => v!.isEmpty ? "Required" : null,
     );
   }
 }

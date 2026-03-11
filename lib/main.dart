@@ -6,9 +6,10 @@ import 'package:flutter_auth/screens/register_screen.dart';
 import 'package:flutter_auth/screens/report.dart';
 import 'package:flutter_auth/screens/view_events.dart';
 import 'package:flutter_auth/screens/splash_screen.dart';
+import 'package:flutter_auth/screens/admin_dashboard.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -18,17 +19,21 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Auth',
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
+      title: 'KEC SEMS',
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+        useMaterial3: true,
+      ),
       initialRoute: '/splash',
       routes: {
-        '/splash': (context) => SplashScreen(),
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/user_screen': (context) => UserScreen(),
-        '/event_registration': (context) => EventRegistration(),
-        '/view_events': (context) => ViewEvents(),
-        '/report': (context) => Report(),
+        '/splash': (context) => const SplashScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/user_screen': (context) => const UserScreen(),
+        '/event_registration': (context) => const EventRegistration(),
+        '/view_events': (context) => const ViewEvents(),
+        '/report': (context) => const Report(),
+        '/admin': (context) => const AdminDashboard(),
       },
     );
   }

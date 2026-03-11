@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_auth/services/auth_services.dart';
+import 'package:flutter_auth/utils/responsive_layout.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -49,128 +50,128 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "User Profile",
-            style: TextStyle(fontSize: 24, color: Colors.white),
-          ),
-          backgroundColor: Colors.blueAccent,
-          elevation: 0,
-          automaticallyImplyLeading: false, // Prevent back button
-          iconTheme: const IconThemeData(color: Colors.black),
-          actions: [
-            IconButton(
-              onPressed: logout,
-              icon: const Icon(
-                Icons.logout,
-                color: Color.fromARGB(255, 254, 253, 253),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.grey[100],
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 600),
-              child: Card(
-                elevation: 12,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Student Portal", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.indigo,
+        elevation: 0,
+        actions: [
+          IconButton(onPressed: logout, icon: const Icon(Icons.logout, color: Colors.white)),
+        ],
+      ),
+      body: ResponsiveLayout(
+        mobile: _buildContent(padding: 16),
+        desktop: _buildContent(padding: 40, isWide: true),
+      ),
+    );
+  }
+
+  Widget _buildContent({required double padding, bool isWide = false}) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(padding),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            children: [
+              _buildProfileHeader(),
+              const SizedBox(height: 30),
+              if (isWide)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildInfoSection()),
+                    const SizedBox(width: 30),
+                    Expanded(child: _buildActionSection()),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    _buildInfoSection(),
+                    const SizedBox(height: 30),
+                    _buildActionSection(),
+                  ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(25.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const CircleAvatar(
-                        radius: 60,
-                        backgroundImage: AssetImage('assets/avatar.png'),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildInfoTile(Icons.person_outline, "Name", name),
-                      if (!email.endsWith('@kongu.ac.in'))
-                        _buildInfoTile(
-                          Icons.badge_outlined,
-                          "Roll Number",
-                          rollNumber,
-                        ),
-                      _buildInfoTile(Icons.email_outlined, "Gmail", email),
-                      const SizedBox(height: 20),
-                      if (!email.endsWith('@kongu.ac.in'))
-                        _buildButton(
-                          "Register for Event",
-                          () => Navigator.pushNamed(
-                            context,
-                            "/event_registration",
-                          ),
-                        ),
-                      _buildButton(
-                        "View Registered Event",
-                        () => Navigator.pushNamed(context, "/view_events"),
-                      ),
-                      _buildButton(
-                        "Report",
-                        () => Navigator.pushNamed(context, "/report"),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Column(
+      children: [
+        const CircleAvatar(
+          radius: 60,
+          backgroundColor: Colors.indigoAccent,
+          child: Icon(Icons.person, size: 60, color: Colors.white),
+        ),
+        const SizedBox(height: 15),
+        Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(email, style: TextStyle(color: Colors.grey[600])),
+      ],
+    );
+  }
+
+  Widget _buildInfoSection() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Information", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Divider(),
+            _buildInfoTile(Icons.badge, "Roll Number", rollNumber),
+            _buildInfoTile(Icons.school, "Institution", "KEC"),
+            _buildInfoTile(Icons.security, "Status", "Student"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionSection() {
+    return Column(
+      children: [
+        _buildMenuButton("Register New Event", Icons.add_circle_outline, Colors.indigo, () => Navigator.pushNamed(context, "/event_registration")),
+        _buildMenuButton("My Registrations", Icons.list_alt, Colors.blue, () => Navigator.pushNamed(context, "/view_events")),
+        _buildMenuButton("Participation Report", Icons.assessment, Colors.purple, () => Navigator.pushNamed(context, "/report")),
+      ],
     );
   }
 
   Widget _buildInfoTile(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Icon(icon, size: 28, color: Colors.blueAccent),
-          const SizedBox(width: 12),
-          Text(
-            "$label:",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
-            ),
-          ),
+          Icon(icon, size: 20, color: Colors.indigo),
+          const SizedBox(width: 10),
+          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(value),
         ],
       ),
     );
   }
 
-  Widget _buildButton(String text, VoidCallback onPressed) {
+  Widget _buildMenuButton(String title, IconData icon, Color color, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: ElevatedButton(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: ElevatedButton.icon(
+        icon: Icon(icon, color: Colors.white),
+        label: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          backgroundColor: color,
           minimumSize: const Size(double.infinity, 55),
-          elevation: 6,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 2,
         ),
-        onPressed: onPressed,
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
+        onPressed: onTap,
       ),
     );
   }

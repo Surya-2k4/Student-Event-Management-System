@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_auth/screens/user_screen.dart';
 import 'package:flutter_auth/services/event_services.dart';
+import 'package:flutter_auth/utils/responsive_layout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ViewEvents extends StatefulWidget {
@@ -13,211 +13,143 @@ class ViewEvents extends StatefulWidget {
 class _ViewEventsState extends State<ViewEvents> {
   List<dynamic> events = [];
   bool isLoading = true;
+  String userRole = "Student";
   String email = "";
-  String rollNumber = "";
 
   @override
   void initState() {
     super.initState();
-    loadUserData();
+    _loadData();
   }
 
-  Future<void> loadUserData() async {
+  Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       email = prefs.getString("email") ?? "";
-      rollNumber = prefs.getString("rollNumber") ?? "";
+      userRole = prefs.getString("role") ?? "Student";
     });
-    fetchEvents();
+    _fetchEvents();
   }
 
-  Future<void> fetchEvents() async {
-    setState(() {
-      isLoading = true;
-    });
-
+  Future<void> _fetchEvents() async {
+    setState(() => isLoading = true);
     try {
-      final fetchedEvents = await EventService().fetchEvents(
-        email: email.endsWith('@kongu.ac.in') ? null : email,
+      final fetched = await EventService().fetchEvents(
+        email: (userRole == "Admin" || userRole == "Staff") ? null : email,
       );
-
-      if (mounted) {
-        setState(() {
-          events = fetchedEvents.reversed.toList();
-          isLoading = false;
-        });
-      }
+      setState(() {
+        events = fetched.reversed.toList();
+        isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-      debugPrint("Error fetching events: $e");
+      setState(() => isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          color: Colors.white,
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => UserScreen()),
-            );
-          },
-        ),
-        title: Text("Registered Events", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blueAccent,
+        title: const Text("Achievement Records", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.indigo,
+        elevation: 0,
+        actions: [
+           IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: _fetchEvents),
+        ],
       ),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : events.isEmpty
-              ? Center(
-                child: Text(
-                  "No events registered yet!",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : events.isEmpty
+              ? _buildEmptyState()
+              : ResponsiveLayout(
+                  mobile: _buildList(crossAxisCount: 1),
+                  desktop: _buildList(crossAxisCount: 3),
                 ),
-              )
-              : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(
-                      "Total Event Registrations: ${events.length}",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: EdgeInsets.all(10),
-                      itemCount: events.length,
-                      itemBuilder: (context, index) {
-                        final event = events[index];
-                        return Card(
-                          elevation: 4,
-                          margin: EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ExpansionTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.blueAccent,
-                              child: Text(
-                                event["eventName"][0].toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              event["eventName"],
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                            subtitle: Text(event["college"]),
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildDetailRow("Full Name", event['name']),
-                                    _buildDetailRow("Email", event['email']),
-                                    _buildDetailRow(
-                                      "College Name",
-                                      event['college'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Contact",
-                                      event['contact'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Roll Number",
-                                      event['rollNumber'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Symposium Name",
-                                      event['symposiumName'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Event Type",
-                                      event['eventType'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Team or Individual",
-                                      event['teamOrIndividual'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Team Members",
-                                      event['teamMembers'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Event Date",
-                                      event['eventDate'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Event Days Spent",
-                                      event['eventDaysSpent'].toString(),
-                                    ),
-                                    _buildDetailRow(
-                                      "Prize Amount",
-                                      event['prizeAmount'].toString(),
-                                    ),
-                                    _buildDetailRow(
-                                      "Position Secured",
-                                      event['positionSecured'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Certification Link",
-                                      event['certificationLink'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Inter or Intra Event",
-                                      event['interOrIntraEvent'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Date Registered",
-                                      event['date'],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("$label: ", style: TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value)),
+          Icon(Icons.event_busy, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 20),
+          const Text("No registrations found", style: TextStyle(fontSize: 18, color: Colors.grey)),
         ],
       ),
+    );
+  }
+
+  Widget _buildList({required int crossAxisCount}) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Text("Showing ${events.length} records", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
+          if (crossAxisCount == 1)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: events.length,
+              itemBuilder: (context, index) => _buildEventCard(events[index]),
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                childAspectRatio: 1.5,
+              ),
+              itemCount: events.length,
+              itemBuilder: (context, index) => _buildEventCard(events[index]),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventCard(dynamic event) {
+    final String title = event['eventName'] ?? event['symposiumName'] ?? "Event";
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: ExpansionTile(
+        leading: CircleAvatar(backgroundColor: Colors.indigo, child: Text(title[0].toUpperCase(), style: const TextStyle(color: Colors.white))),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text("${event['college']} | ${event['eventDate']}"),
+        children: [
+           Padding(
+             padding: const EdgeInsets.all(16),
+             child: Column(
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 _buildDetail("Participant", event['name']),
+                 _buildDetail("Roll No", event['rollNumber']),
+                 _buildDetail("Event Type", event['eventType']),
+                 _buildDetail("Position", event['positionSecured']),
+                 _buildDetail("Inter/Intra", event['interOrIntraEvent']),
+                 if (event['certificationLink'] != null && event['certificationLink'].toString().isNotEmpty)
+                    TextButton.icon(onPressed: () {}, icon: const Icon(Icons.link), label: const Text("View Certificate")),
+               ],
+             ),
+           )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetail(String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(children: [Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)), Text(value?.toString() ?? "-")]),
     );
   }
 }

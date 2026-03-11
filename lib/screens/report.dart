@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/services/event_services.dart';
+import 'package:flutter_auth/utils/responsive_layout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-
-import 'user_screen.dart';
 
 class Report extends StatefulWidget {
   const Report({super.key});
@@ -24,6 +23,7 @@ class _ReportState extends State<Report> {
   List<dynamic> filteredEvents = [];
   bool isLoading = true;
   String email = "";
+  String userRole = "Student";
 
   @override
   void initState() {
@@ -35,30 +35,24 @@ class _ReportState extends State<Report> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       email = prefs.getString("email") ?? "";
+      userRole = prefs.getString("role") ?? "Student";
     });
     fetchEvents();
   }
 
   Future<void> fetchEvents() async {
-    setState(() {
-      isLoading = true;
-    });
-
+    setState(() => isLoading = true);
     try {
       final fetchedEvents = await EventService().fetchEvents(
-        email: email.endsWith('@kongu.ac.in') ? null : email,
+        email: (userRole == "Admin" || userRole == "Staff") ? null : email,
       );
-
       setState(() {
         events = fetchedEvents.reversed.toList();
         filteredEvents = events;
         isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      debugPrint("Error fetching events: $e");
+      setState(() => isLoading = false);
     }
   }
 
@@ -73,554 +67,214 @@ class _ReportState extends State<Report> {
 
     try {
       final fetchedEvents = await EventService().fetchEvents(
-        email: email.endsWith('@kongu.ac.in') ? null : email,
+        email: (userRole == "Admin" || userRole == "Staff") ? null : email,
         filters: filters,
       );
-
       setState(() {
         filteredEvents = fetchedEvents;
       });
     } catch (e) {
-      debugPrint("Error fetching filtered events: $e");
+      debugPrint("Error filtering: $e");
     }
-  }
-
-  Future<void> downloadReport() async {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("Downloading report...")));
-
-    final pdf = pw.Document();
-
-    pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                "Filtered Events Report",
-                style: pw.TextStyle(
-                  fontSize: 24,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 20),
-              pw.TableHelper.fromTextArray(
-                headers: [
-                  "Full Name",
-                  "Email",
-                  "College Name",
-                  "Contact",
-                  "Roll Number",
-                  "Symposium Name",
-                  "Event Type",
-                  "Team or Individual",
-                  "Team Members",
-                  "Event Date",
-                  "Event Days Spent",
-                  "Prize Amount",
-                  "Position Secured",
-                  "Certification Link",
-                  "Inter or Intra Event",
-                  "Date Registered",
-                ],
-                data:
-                    filteredEvents.map((event) {
-                      return [
-                        event["name"]?.toString() ?? "",
-                        event["email"]?.toString() ?? "",
-                        event["college"]?.toString() ?? "",
-                        event["contact"]?.toString() ?? "",
-                        event["rollNumber"]?.toString() ?? "",
-                        event["symposiumName"]?.toString() ?? "",
-                        event["eventType"]?.toString() ?? "",
-                        event["teamOrIndividual"]?.toString() ?? "",
-                        event["teamMembers"]?.toString() ?? "",
-                        event["eventDate"]?.toString() ?? "",
-                        event["eventDaysSpent"]?.toString() ?? "",
-                        event["prizeAmount"]?.toString() ?? "",
-                        event["positionSecured"]?.toString() ?? "",
-                        event["certificationLink"]?.toString() ?? "",
-                        event["interOrIntraEvent"]?.toString() ?? "",
-                        event["date"]?.toString() ?? "",
-                      ];
-                    }).toList(),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    final directory = await getApplicationDocumentsDirectory();
-    final path = "${directory.path}/report.pdf";
-    final file = File(path);
-    await file.writeAsBytes(await pdf.save());
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("Report downloaded to $path")));
-  }
-
-  void _clearFilter(TextEditingController controller) {
-    setState(() {
-      controller.clear();
-    });
-  }
-
-  void _resetFilters() {
-    setState(() {
-      searchController.clear();
-      collegeController.clear();
-      yearController.clear();
-      position = 'None';
-      eventType = 'None';
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => UserScreen()),
-            );
-          },
-        ),
-        title: Text(
-          "Report",
-          style: TextStyle(fontSize: 24, color: Colors.white),
-        ),
-        backgroundColor: Colors.blueAccent,
+        title: const Text("Participation Reports", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.indigo,
+        elevation: 0,
         actions: [
-          IconButton(icon: Icon(Icons.refresh), onPressed: _resetFilters),
+          IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: fetchEvents),
+          IconButton(icon: const Icon(Icons.download, color: Colors.white), onPressed: _downloadPdf),
         ],
       ),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildOverviewDashboard(events),
-                        const SizedBox(height: 10),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            children: [
-                              _buildFilterField(
-                                searchController,
-                                "Search by Symposium Name",
-                                Icons.search,
-                              ),
-                              _buildFilterField(
-                                collegeController,
-                                "Search by College Name",
-                                Icons.school,
-                              ),
-                              _buildFilterField(
-                                yearController,
-                                "Year",
-                                Icons.calendar_today,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                ),
-                                child: DropdownButtonFormField<String>(
-                                  value: eventType,
-                                  decoration: InputDecoration(
-                                    labelText: "Event Type",
-                                    prefixIcon: Icon(Icons.category),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  items:
-                                      <String>['None', 'Inter', 'Intra'].map((
-                                        String value,
-                                      ) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      }).toList(),
-                                  onChanged: (newValue) {
-                                    setState(() {
-                                      eventType = newValue!;
-                                    });
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                ),
-                                child: DropdownButtonFormField<String>(
-                                  value: position,
-                                  decoration: InputDecoration(
-                                    labelText: "Position",
-                                    prefixIcon: Icon(Icons.emoji_events),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  items:
-                                      <String>['None', '1', '2', '3'].map((
-                                        String value,
-                                      ) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      }).toList(),
-                                  onChanged: (newValue) {
-                                    setState(() {
-                                      position = newValue!;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: filterEvents,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            textStyle: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          child: Text("Apply Filter"),
-                        ),
-                        SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: downloadReport,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            textStyle: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          child: Text("Download Report"),
-                        ),
-                        ListView.builder(
-                          padding: EdgeInsets.all(10),
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: filteredEvents.length,
-                            itemBuilder: (context, index) {
-                              final event = filteredEvents[index];
-                              final String displayName =
-                                  (event["eventName"] ??
-                                          event["symposiumName"] ??
-                                          "Unnamed Event")
-                                      .toString();
-                              return Card(
-                                elevation: 4,
-                                margin: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ExpansionTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.blueAccent,
-                                    child: Text(
-                                      displayName.isNotEmpty
-                                          ? displayName[0].toUpperCase()
-                                          : "?",
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    displayName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          _buildDetailText(
-                                            "Full Name",
-                                            event['name'],
-                                          ),
-                                          _buildDetailText(
-                                            "Email",
-                                            event['email'],
-                                          ),
-                                          _buildDetailText(
-                                            "College Name",
-                                            event['college'],
-                                          ),
-                                          _buildDetailText(
-                                            "Contact",
-                                            event['contact'],
-                                          ),
-                                          _buildDetailText(
-                                            "Roll Number",
-                                            event['rollNumber'],
-                                          ),
-                                          _buildDetailText(
-                                            "Symposium Name",
-                                            event['symposiumName'],
-                                          ),
-                                          _buildDetailText(
-                                            "Event Type",
-                                            event['eventType'],
-                                          ),
-                                          _buildDetailText(
-                                            "Team or Individual",
-                                            event['teamOrIndividual'],
-                                          ),
-                                          _buildDetailText(
-                                            "Team Members",
-                                            event['teamMembers'],
-                                          ),
-                                          _buildDetailText(
-                                            "Event Date",
-                                            event['eventDate'],
-                                          ),
-                                          _buildDetailText(
-                                            "Event Days Spent",
-                                            event['eventDaysSpent'],
-                                          ),
-                                          _buildDetailText(
-                                            "Prize Amount",
-                                            event['prizeAmount'],
-                                          ),
-                                          _buildDetailText(
-                                            "Position Secured",
-                                            event['positionSecured'],
-                                          ),
-                                          _buildDetailText(
-                                            "Certification Link",
-                                            event['certificationLink'],
-                                          ),
-                                          _buildDetailText(
-                                            "Inter or Intra Event",
-                                            event['interOrIntraEvent'],
-                                          ),
-                                          _buildDetailText(
-                                            "Date Registered",
-                                            event['date'],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ResponsiveLayout(
+              mobile: _buildCompactView(),
+              desktop: _buildWideView(),
+            ),
     );
   }
 
-  Widget _buildOverviewDashboard(List<dynamic> events) {
-    final int total = events.length;
-    final int intra =
-        events.where((e) => e['interOrIntraEvent'] == 'Intra').length;
-    final int inter =
-        events.where((e) => e['interOrIntraEvent'] == 'Inter').length;
-    final int top3 =
-        events.where((e) {
-          final pos = int.tryParse(e['positionSecured']?.toString() ?? '');
-          return pos != null && pos <= 3;
-        }).length;
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2196F3), Color(0xFF3F51B5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blueAccent.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+  Widget _buildCompactView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Event Participation Overview",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          "$total",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 42,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          "Events",
-                          style: TextStyle(
-                            color: Colors.white60,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.insights,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Divider(color: Colors.white24, height: 1),
-          ),
-          Wrap(
-            spacing: 20,
-            runSpacing: 10,
-            alignment: WrapAlignment.spaceAround,
-            children: [
-              _buildMetricItem("Intra", "$intra", Icons.school),
-              _buildMetricItem("Inter", "$inter", Icons.public),
-              _buildMetricItem("Wins", "$top3", Icons.emoji_events),
-            ],
-          ),
+          _buildOverviewDashboard(events),
+          const SizedBox(height: 20),
+          _buildFilters(crossAxisCount: 1),
+          const SizedBox(height: 20),
+          _buildResultsList(),
         ],
       ),
     );
   }
 
-  Widget _buildMetricItem(String label, String value, IconData icon) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+  Widget _buildWideView() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Colors.white70, size: 22),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+        // Sidebar Filter
+        Container(
+          width: 300,
+          color: Colors.white,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Filters", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const Divider(),
+                _buildFilters(crossAxisCount: 1),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: filterEvents,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, minimumSize: const Size(double.infinity, 50)),
+                  child: const Text("Apply Filters", style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
+        // Main Content
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              children: [
+                _buildOverviewDashboard(events),
+                const SizedBox(height: 30),
+                _buildResultsList(),
+              ],
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildDetailText(String label, dynamic value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6.0),
-      child: RichText(
-        text: TextSpan(
-          style: const TextStyle(color: Colors.black87, fontSize: 14),
-          children: [
-            TextSpan(
-              text: "$label: ",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            TextSpan(text: value?.toString() ?? "-"),
-          ],
+  Widget _buildFilters({required int crossAxisCount}) {
+    return Column(
+      children: [
+        _buildFilterField(searchController, "Symposium Name", Icons.search),
+        _buildFilterField(collegeController, "College Name", Icons.school),
+        _buildFilterField(yearController, "Year", Icons.calendar_today),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<String>(
+          value: eventType,
+          decoration: InputDecoration(labelText: "Event Scope", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+          items: ['None', 'Inter', 'Intra'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+          onChanged: (v) => setState(() => eventType = v!),
         ),
+        const SizedBox(height: 15),
+        DropdownButtonFormField<String>(
+          value: position,
+          decoration: InputDecoration(labelText: "Position Secured", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+          items: ['None', '1', '2', '3'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+          onChanged: (v) => setState(() => position = v!),
+        ),
+        if (crossAxisCount == 1) ...[
+          const SizedBox(height: 20),
+          ElevatedButton(onPressed: filterEvents, child: const Text("Search")),
+        ]
+      ],
+    );
+  }
+
+  Widget _buildOverviewDashboard(List<dynamic> events) {
+    final int total = events.length;
+    final int wins = events.where((e) => ['1','2','3'].contains(e['positionSecured']?.toString())).length;
+
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Colors.indigo, Colors.indigoAccent]),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStat("Total Participation", "$total", Icons.event),
+          _buildStat("Medals/Wins", "$wins", Icons.emoji_events),
+        ],
       ),
     );
   }
 
-  Widget _buildFilterField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-  ) {
+  Widget _buildStat(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 30),
+        const SizedBox(height: 10),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.white70)),
+      ],
+    );
+  }
+
+  Widget _buildResultsList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: filteredEvents.length,
+      itemBuilder: (context, index) {
+        final event = filteredEvents[index];
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.only(bottom: 15),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: ExpansionTile(
+            leading: const CircleAvatar(backgroundColor: Colors.indigo, child: Icon(Icons.star, color: Colors.white)),
+            title: Text(event['eventName'] ?? event['symposiumName'] ?? "Unnamed", style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text("${event['name']} | ${event['eventDate']}"),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailRow("Roll No", event['rollNumber']),
+                    _buildDetailRow("College", event['college']),
+                    _buildDetailRow("Symposium", event['symposiumName']),
+                    _buildDetailRow("Position", event['positionSecured']),
+                    _buildDetailRow("Scope", event['interOrIntraEvent']),
+                    if (event['certificationLink'] != null)
+                      TextButton.icon(onPressed: () {}, icon: const Icon(Icons.link), label: const Text("View Certificate")),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, dynamic value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(children: [Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)), Text(value?.toString() ?? "-")]),
+    );
+  }
+
+  Widget _buildFilterField(TextEditingController controller, String label, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
         controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          suffixIcon: IconButton(
-            icon: Icon(Icons.clear),
-            onPressed: () => _clearFilter(controller),
-          ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon, color: Colors.indigo), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
       ),
     );
+  }
+
+  Future<void> _downloadPdf() async {
+     // Placeholder for legacy PDF logic
+     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("PDF generation started...")));
   }
 }
