@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/screens/user_screen.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter_auth/services/event_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ViewEvents extends StatefulWidget {
@@ -33,25 +32,20 @@ class _ViewEventsState extends State<ViewEvents> {
   }
 
   Future<void> fetchEvents() async {
-    final String apiUrl =
-        "http://localhost:5000/view-events"; // Replace if needed
+    setState(() {
+      isLoading = true;
+    });
 
     try {
-      final response = await http.get(
-        Uri.parse(
-          email.endsWith('@kongu.ac.in') ? apiUrl : "$apiUrl?email=$email",
-        ),
+      final fetchedEvents = await EventService().fetchEvents(
+        email: email.endsWith('@kongu.ac.in') ? null : email,
       );
 
-      if (response.statusCode == 200) {
-        if (mounted) {
-          setState(() {
-            events = json.decode(response.body).reversed.toList();
-            isLoading = false;
-          });
-        }
-      } else {
-        throw Exception("Failed to load events");
+      if (mounted) {
+        setState(() {
+          events = fetchedEvents.reversed.toList();
+          isLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) {

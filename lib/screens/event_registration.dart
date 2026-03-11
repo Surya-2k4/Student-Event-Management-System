@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_auth/services/auth_services.dart';
+import 'package:flutter_auth/services/event_services.dart';
 
 class EventRegistration extends StatefulWidget {
   const EventRegistration({super.key});
@@ -60,45 +59,40 @@ class _EventRegistrationState extends State<EventRegistration> {
       return;
     }
 
-    final String apiUrl = "http://localhost:5000/register-event";
-
     setState(() {
       isLoading = true;
     });
 
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "name": nameController.text,
-        "email": emailController.text,
-        "eventName": eventNameController.text,
-        "college": collegeController.text,
-        "contact": contactController.text,
-        "rollNumber": rollNumberController.text,
-        "symposiumName": symposiumNameController.text,
-        "eventType": eventTypeController.text,
-        "teamOrIndividual": teamOrIndividualController.text,
-        "teamMembers": teamMembersController.text,
-        "eventDate": eventDateController.text,
-        "eventDaysSpent": eventDaysSpentController.text,
-        "prizeAmount": prizeAmountController.text,
-        "positionSecured": positionSecuredController.text,
-        "certificationLink": certificationLinkController.text,
-        "interOrIntraEvent": interOrIntraEvent,
-      }),
-    );
+    final eventData = {
+      "name": nameController.text,
+      "email": emailController.text,
+      "eventName": eventNameController.text,
+      "college": collegeController.text,
+      "contact": contactController.text,
+      "rollNumber": rollNumberController.text,
+      "symposiumName": symposiumNameController.text,
+      "eventType": eventTypeController.text,
+      "teamOrIndividual": teamOrIndividualController.text,
+      "teamMembers": teamMembersController.text,
+      "eventDate": eventDateController.text,
+      "eventDaysSpent": int.tryParse(eventDaysSpentController.text) ?? 0,
+      "prizeAmount": double.tryParse(prizeAmountController.text) ?? 0.0,
+      "positionSecured": positionSecuredController.text,
+      "certificationLink": certificationLinkController.text,
+      "interOrIntraEvent": interOrIntraEvent,
+    };
+
+    final success = await EventService().registerEvent(eventData);
 
     setState(() {
       isLoading = false;
     });
 
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 201) {
+    if (success) {
       _showDialog("Event registered successfully!", Colors.green);
       _clearFields();
     } else {
-      _showMessage(data['message'], Colors.red);
+      _showMessage("Failed to register event. Please check your connection or token.", Colors.red);
     }
   }
 

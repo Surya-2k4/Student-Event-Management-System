@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter_auth/services/event_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -41,25 +40,20 @@ class _ReportState extends State<Report> {
   }
 
   Future<void> fetchEvents() async {
-    final String apiUrl =
-        "http://localhost:5000/view-events"; // Replace if needed
+    setState(() {
+      isLoading = true;
+    });
 
     try {
-      final response = await http.get(
-        Uri.parse(
-          email.endsWith('@kongu.ac.in') ? apiUrl : "$apiUrl?email=$email",
-        ),
+      final fetchedEvents = await EventService().fetchEvents(
+        email: email.endsWith('@kongu.ac.in') ? null : email,
       );
 
-      if (response.statusCode == 200) {
-        setState(() {
-          events = json.decode(response.body).reversed.toList();
-          filteredEvents = events;
-          isLoading = false;
-        });
-      } else {
-        throw Exception("Failed to load events");
-      }
+      setState(() {
+        events = fetchedEvents.reversed.toList();
+        filteredEvents = events;
+        isLoading = false;
+      });
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -69,8 +63,7 @@ class _ReportState extends State<Report> {
   }
 
   void filterEvents() async {
-    final queryParameters = {
-      if (!email.endsWith('@kongu.ac.in')) 'email': email,
+    final filters = {
       'year': yearController.text,
       'symposiumName': searchController.text,
       'college': collegeController.text,
@@ -78,18 +71,15 @@ class _ReportState extends State<Report> {
       'position': position == 'None' ? '' : position,
     };
 
-    final uri = Uri.http('localhost:5000', '/view-events', queryParameters);
-
     try {
-      final response = await http.get(uri);
+      final fetchedEvents = await EventService().fetchEvents(
+        email: email.endsWith('@kongu.ac.in') ? null : email,
+        filters: filters,
+      );
 
-      if (response.statusCode == 200) {
-        setState(() {
-          filteredEvents = json.decode(response.body);
-        });
-      } else {
-        throw Exception("Failed to load filtered events");
-      }
+      setState(() {
+        filteredEvents = fetchedEvents;
+      });
     } catch (e) {
       debugPrint("Error fetching filtered events: $e");
     }
