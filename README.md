@@ -10,7 +10,7 @@ From a **beneficial standpoint**, teachers gain significant advantages, includin
 ## 🛠 Tech Stack
 - **Frontend:** Flutter 🚀
 - **Backend:** Node.js (Express.js) ⚡
-- **Database:** MongoDB 🗄️
+- **Database:** PostgreSQL (Neon) 🗄️
 
 ## 🌟 Key Features
 - 🔐 **User Authentication** (Student & Admin)
@@ -20,7 +20,7 @@ From a **beneficial standpoint**, teachers gain significant advantages, includin
 - 📊 **Dashboard for Event Statistics**
 
 ## 📸 Screenshots
-Below are some screenshots showcasing the application interface & you can able to see the remaining images in screenshots folder:
+Below are some screenshots showcasing the application interface. You can see the remaining images in the screenshots folder:
 
 <div align="center">
   <table>

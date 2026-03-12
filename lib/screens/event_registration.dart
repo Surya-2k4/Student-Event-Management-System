@@ -35,7 +35,14 @@ class _EventRegistrationState extends State<EventRegistration> {
   String? interOrIntraEvent;
 
   bool isLoading = false;
+  String userRole = "student";
 
+<<<<<<< Updated upstream
+=======
+  final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
+  final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
+
+>>>>>>> Stashed changes
   @override
   void initState() {
     super.initState();
@@ -44,7 +51,27 @@ class _EventRegistrationState extends State<EventRegistration> {
 
   void loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
     final email = prefs.getString("email") ?? "";
+    final role = prefs.getString("role")?.toLowerCase() ?? "student";
+
+    if (token.isEmpty) {
+      if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
+      return;
+    }
+
+    setState(() => userRole = role);
+
+    // On browser refresh, redirect to dashboard if root
+    if (mounted) {
+      Future.microtask(() {
+        if (mounted && !Navigator.canPop(context)) {
+          String targetRoute = (role == "admin" || role == "staff") ? "/admin" : "/user_screen";
+          Navigator.pushReplacementNamed(context, targetRoute);
+        }
+      });
+    }
+
     final userDetails = await AuthService().fetchUserDetails(email);
     if (userDetails != null) {
       setState(() {
@@ -175,6 +202,7 @@ class _EventRegistrationState extends State<EventRegistration> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
+<<<<<<< Updated upstream
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pushReplacementNamed(context, "/user_screen");
@@ -186,6 +214,26 @@ class _EventRegistrationState extends State<EventRegistration> {
         ),
         backgroundColor: Colors.blueAccent,
         centerTitle: true,
+=======
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () async {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              String targetRoute = "/user_screen";
+              final prefs = await SharedPreferences.getInstance();
+              final role = prefs.getString("role")?.toLowerCase() ?? "";
+              if (role == "admin" || role == "staff") {
+                targetRoute = "/admin";
+              }
+              if (mounted) Navigator.pushReplacementNamed(context, targetRoute);
+            }
+          },
+        ),
+        title: const Text("New Achievement", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: primaryDark,
+        elevation: 0,
+>>>>>>> Stashed changes
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -195,12 +243,42 @@ class _EventRegistrationState extends State<EventRegistration> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+<<<<<<< Updated upstream
                 _buildInputField(nameController, "Full Name", Icons.person),
                 _buildInputField(emailController, "Email", Icons.email),
                 _buildInputField(
                   collegeController,
                   "College Name",
                   Icons.school,
+=======
+                _buildSectionHeading("Technical Details", "Provide the core information about the event"),
+                const SizedBox(height: 30),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: gridCols,
+                  mainAxisSpacing: 15,
+                  crossAxisSpacing: 25,
+                  childAspectRatio: gridCols == 1 ? 4 : 5.5,
+                  children: [
+                    _buildInput(nameController, "Participant Name", Icons.person_outline, readOnly: true),
+                    _buildInput(emailController, "Institutional Email", Icons.email_outlined, readOnly: true),
+                    _buildInput(rollNumberController, "Roll Number", Icons.badge_outlined, readOnly: true),
+                    _buildInput(contactController, "Contact Number", Icons.phone_outlined),
+                    _buildInput(collegeController, "Institution Name", Icons.account_balance_outlined),
+                    _buildInput(symposiumNameController, "Symposium Title", Icons.event_note_outlined),
+                    _buildInput(eventNameController, "Specific Event", Icons.emoji_events_outlined),
+                    _buildInput(eventTypeController, "Event Category", Icons.category_outlined),
+                    _buildInput(teamOrIndividualController, "Entry Type", Icons.groups_outlined),
+                    _buildInput(teamMembersController, "Team Members (if any)", Icons.people_outline),
+                    _buildDateInput(),
+                    _buildInput(eventDaysSpentController, "Duration (Days)", Icons.timer_outlined, isNumber: true),
+                    _buildInput(prizeAmountController, "Award Amount", Icons.currency_rupee, isNumber: true),
+                    _buildInput(positionSecuredController, "Rank/Position", Icons.stars_outlined),
+                    _buildInput(certificationLinkController, "Certificate URL", Icons.link_rounded),
+                    _buildDropdown("Participation Scope", interOrIntraEvent, ['Inter', 'Intra'], (v) => setState(() => interOrIntraEvent = v)),
+                  ],
+>>>>>>> Stashed changes
                 ),
                 _buildInputField(
                   contactController,

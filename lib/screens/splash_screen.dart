@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_auth/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,12 +30,22 @@ class _SplashScreenState extends State<SplashScreen>
     // Start the animation
     _controller.forward();
 
-    // Set a timer to navigate to the login screen after 3 seconds
-    Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+    // Check for existing session and navigate accordingly
+    Timer(const Duration(milliseconds: 2500), () async {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token");
+      final role = prefs.getString("role")?.toLowerCase() ?? "";
+
+      if (!mounted) return;
+
+      if (token != null && token.isNotEmpty) {
+        // Authenticated session found - force navigation to respective dashboard
+        String targetRoute = (role == "admin" || role == "staff") ? "/admin" : "/user_screen";
+        Navigator.pushNamedAndRemoveUntil(context, targetRoute, (route) => false);
+      } else {
+        // No session, go to login
+        Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
+      }
     });
   }
 
@@ -47,18 +58,33 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF3AAFFF), Color.fromARGB(255, 28, 250, 250)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _animation,
-            child: Image.asset('assets/kecc_logo.png', width: 200, height: 200),
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Center(
+        child: FadeTransition(
+          opacity: _animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.9, end: 1.0).animate(_animation),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/kec_logo.png', width: 160, height: 160),
+                const SizedBox(height: 30),
+                const Text("KEC SEMS", 
+                  style: TextStyle(
+                    fontSize: 32, 
+                    fontWeight: FontWeight.w900, 
+                    color: Color(0xFF0F172A),
+                    letterSpacing: 2
+                  )),
+                const SizedBox(height: 8),
+                Text("Student Event Management System", 
+                  style: TextStyle(
+                    fontSize: 14, 
+                    fontWeight: FontWeight.w500, 
+                    color: Colors.grey[600],
+                  )),
+              ],
+            ),
           ),
         ),
       ),

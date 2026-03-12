@@ -24,7 +24,15 @@ class _ReportState extends State<Report> {
   List<dynamic> events = [];
   List<dynamic> filteredEvents = [];
   bool isLoading = true;
+<<<<<<< Updated upstream
   String email = "";
+=======
+  String userRole = "";
+  String userEmail = "";
+
+  final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
+  final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
+>>>>>>> Stashed changes
 
   @override
   void initState() {
@@ -34,6 +42,7 @@ class _ReportState extends State<Report> {
 
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+<<<<<<< Updated upstream
     setState(() {
       email = prefs.getString("email") ?? "";
     });
@@ -61,6 +70,45 @@ class _ReportState extends State<Report> {
         throw Exception("Failed to load events");
       }
     } catch (e) {
+=======
+    String token = prefs.getString("token") ?? "";
+    String role = prefs.getString("role")?.toLowerCase() ?? "";
+    String email = prefs.getString("email") ?? "";
+    
+    // If no token, return to login
+    if (token.isEmpty) {
+      if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
+      return;
+    }
+
+    setState(() {
+      userRole = role;
+      userEmail = email;
+    });
+
+    // Handle browser refresh (F5): If this is the root of the stack, locate to dashboard
+    if (mounted) {
+      Future.microtask(() {
+        if (mounted && !Navigator.canPop(context)) {
+          String targetRoute = (role == "admin" || role == "staff") ? "/admin" : "/user_screen";
+          Navigator.pushReplacementNamed(context, targetRoute);
+        }
+      });
+    }
+
+    // Role-based diagnostics
+    if (role.isNotEmpty && role != "admin" && role != "student") {
+      debugPrint("Unauthorized access to reports attempt for role: $role");
+    }
+    
+    fetchEvents(email: role == "student" ? email : null);
+  }
+
+  Future<void> fetchEvents({String? email, Map<String, String>? filters}) async {
+    setState(() => isLoading = true);
+    try {
+      final fetchedEvents = await EventService().fetchEvents(email: email, filters: filters);
+>>>>>>> Stashed changes
       setState(() {
         isLoading = false;
       });
@@ -81,6 +129,7 @@ class _ReportState extends State<Report> {
     final uri = Uri.http('localhost:5000', '/view-events', queryParameters);
 
     try {
+<<<<<<< Updated upstream
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -90,6 +139,13 @@ class _ReportState extends State<Report> {
       } else {
         throw Exception("Failed to load filtered events");
       }
+=======
+      final fetchedEvents = await EventService().fetchEvents(
+        email: userRole == "student" ? userEmail : null,
+        filters: filters,
+      );
+      setState(() => filteredEvents = fetchedEvents);
+>>>>>>> Stashed changes
     } catch (e) {
       debugPrint("Error fetching filtered events: $e");
     }
@@ -192,9 +248,18 @@ class _ReportState extends State<Report> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< Updated upstream
+=======
+    // Allow both admin and student roles to access the report screen
+    if (userRole.isNotEmpty && userRole != "admin" && userRole != "student") {
+      return const Scaffold(body: Center(child: Text("Access Restricted to Authorized Personnel")));
+    }
+
+>>>>>>> Stashed changes
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
+<<<<<<< Updated upstream
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pushReplacement(
@@ -202,6 +267,84 @@ class _ReportState extends State<Report> {
               MaterialPageRoute(builder: (context) => UserScreen()),
             );
           },
+=======
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () async {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              // Fallback for browser refreshed state
+              String targetRoute = "/user_screen";
+              final prefs = await SharedPreferences.getInstance();
+              final role = prefs.getString("role")?.toLowerCase() ?? "";
+              if (role == "admin" || role == "staff") {
+                targetRoute = "/admin";
+              }
+              if (mounted) Navigator.pushReplacementNamed(context, targetRoute);
+            }
+          },
+        ),
+
+        title: const Text("Analytical Reports", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: primaryDark,
+        elevation: 0,
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: fetchEvents),
+          const SizedBox(width: 10),
+        ],
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ResponsiveLayout(
+              mobile: _buildMobileView(),
+              desktop: _buildDesktopView(),
+            ),
+    );
+  }
+
+  Widget _buildMobileView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _buildFilters(isExpanded: true),
+          const SizedBox(height: 20),
+          _buildResultsList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopView() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Sidebar Filters
+        Container(
+          width: 350,
+          color: Colors.white,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Record Filters", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+                const Divider(height: 40),
+                _buildFilters(isExpanded: true),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: filterEvents,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryDark,
+                    minimumSize: const Size(double.infinity, 55),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text("Apply Query", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+>>>>>>> Stashed changes
         ),
         title: Text(
           "Report",
@@ -594,7 +737,102 @@ class _ReportState extends State<Report> {
     );
   }
 
+<<<<<<< Updated upstream
   Widget _buildDetailText(String label, dynamic value) {
+=======
+  Widget _buildFilters({required bool isExpanded}) {
+    return Column(
+      children: [
+        _buildInputField(searchController, "Symposium Name", Icons.search),
+        const SizedBox(height: 15),
+        _buildInputField(collegeController, "Institution", Icons.account_balance),
+        const SizedBox(height: 15),
+        _buildInputField(yearController, "Batch Year", Icons.calendar_today),
+        const SizedBox(height: 15),
+        _buildDropdown("Scope", eventType, ['None', 'Inter', 'Intra'], (v) => setState(() => eventType = v!)),
+        const SizedBox(height: 15),
+        _buildDropdown("Standing", position, ['None', '1', '2', '3'], (v) => setState(() => position = v!)),
+      ],
+    );
+  }
+
+  Widget _buildInputField(TextEditingController ctrl, String label, IconData icon) {
+    return TextField(
+      controller: ctrl,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: primaryDark),
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+      ),
+    );
+  }
+
+  Widget _buildDropdown(String label, String value, List<String> items, ValueChanged<String?> onChanged) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+      ),
+    );
+  }
+
+  Widget _buildResultsList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: filteredEvents.length,
+      itemBuilder: (context, index) {
+        final event = filteredEvents[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
+          ),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            leading: CircleAvatar(backgroundColor: primaryDark, child: const Icon(Icons.person, color: Colors.white, size: 20)),
+            title: Text(event['name'] ?? "Participant", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            subtitle: Text("${event['eventName']} | ${event['college']}"),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDataRow("Roll Number", event['rollNumber']),
+                    _buildDataRow("Symposium", event['symposiumName']),
+                    _buildDataRow("Position", event['positionSecured']),
+                    _buildDataRow("Date", event['eventDate']),
+                    const SizedBox(height: 15),
+                    if (event['certificationLink'] != null && event['certificationLink'] != "")
+                      ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.visibility),
+                        label: const Text("Review Certificate"),
+                        style: ElevatedButton.styleFrom(backgroundColor: accentColor, foregroundColor: primaryDark),
+                      )
+                  ],
+                ),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDataRow(String label, dynamic value) {
+>>>>>>> Stashed changes
     return Padding(
       padding: const EdgeInsets.only(bottom: 6.0),
       child: RichText(
