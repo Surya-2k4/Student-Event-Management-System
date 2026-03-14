@@ -16,8 +16,13 @@ class _ViewEventsState extends State<ViewEvents> {
   String email = "";
   String userRole = "student";
 
-  final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
-  final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
+  // Modern Tech Palette
+  final Color bgColor = const Color(0xFFF4F6F9);
+  final Color primaryDark = const Color(0xFF0F172A);
+  final Color secondaryDark = const Color(0xFF1E293B);
+  final Color accentBlue = const Color(0xFF3B82F6);
+  final Color textPrimary = const Color(0xFF1E293B);
+  final Color textSecondary = const Color(0xFF64748B);
 
   @override
   void initState() {
@@ -41,7 +46,6 @@ class _ViewEventsState extends State<ViewEvents> {
       userRole = storedRole;
     });
 
-    // On refresh, redirect to dashboard if root
     if (mounted) {
       Future.microtask(() {
         if (mounted && !Navigator.canPop(context)) {
@@ -79,38 +83,51 @@ class _ViewEventsState extends State<ViewEvents> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () async {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            } else {
-              String targetRoute = "/user_screen";
-              final prefs = await SharedPreferences.getInstance();
-              final role = prefs.getString("role")?.toLowerCase() ?? "";
-              if (role == "admin" || role == "staff") {
-                targetRoute = "/admin";
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+            onPressed: () async {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                String targetRoute = "/user_screen";
+                final prefs = await SharedPreferences.getInstance();
+                final role = prefs.getString("role")?.toLowerCase() ?? "";
+                if (role == "admin" || role == "staff") {
+                  targetRoute = "/admin";
+                }
+                if (mounted) Navigator.pushReplacementNamed(context, targetRoute);
               }
-              if (mounted) Navigator.pushReplacementNamed(context, targetRoute);
-            }
-          },
+            },
+          ),
         ),
-        title: const Text("Achievement Archive", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: primaryDark,
+        title: const Text("Achievement Archive", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+        centerTitle: false,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [primaryDark, secondaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          ),
+        ),
         elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded, color: Colors.white), onPressed: _fetchEvents),
-          const SizedBox(width: 10),
+          Container(
+            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            child: IconButton(icon: const Icon(Icons.sync_rounded, color: Colors.white, size: 20), onPressed: _fetchEvents),
+          ),
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: accentBlue, strokeWidth: 3))
           : events.isEmpty
               ? _buildEmptyState()
               : ResponsiveLayout(
                   mobile: _buildList(crossAxisCount: 1),
-                  desktop: _buildList(crossAxisCount: 3),
+                  desktop: _buildList(crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : 2),
                 ),
     );
   }
@@ -120,11 +137,15 @@ class _ViewEventsState extends State<ViewEvents> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.folder_off_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 20),
-          const Text("No achievement records found", style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 10),
-          Text("Try refreshing or add a new event", style: TextStyle(color: Colors.grey[400])),
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))]),
+            child: Icon(Icons.layers_clear_rounded, size: 60, color: Colors.grey.shade400),
+          ),
+          const SizedBox(height: 30),
+          Text("Repository Empty", style: TextStyle(fontSize: 22, color: textPrimary, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+          const SizedBox(height: 8),
+          Text("No achievement records indexed yet.\nInitiate a sync or submit a new entry.", textAlign: TextAlign.center, style: TextStyle(color: textSecondary, height: 1.5, fontSize: 15)),
         ],
       ),
     );
@@ -132,15 +153,28 @@ class _ViewEventsState extends State<ViewEvents> {
 
   Widget _buildList({required int crossAxisCount}) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(30),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Summary of Records (${events.length})", style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 24, color: Color(0xFF1E293B))),
-              const SizedBox(height: 25),
+              Row(
+                children: [
+                  Container(width: 4, height: 26, decoration: BoxDecoration(color: accentBlue, borderRadius: BorderRadius.circular(4))),
+                  const SizedBox(width: 12),
+                  Text("Indexed Records", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 26, color: textPrimary, letterSpacing: -0.5)),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(color: accentBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                    child: Text("${events.length}", style: TextStyle(color: accentBlue, fontWeight: FontWeight.w800, fontSize: 14)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
               if (crossAxisCount == 1)
                 ListView.builder(
                   shrinkWrap: true,
@@ -152,11 +186,11 @@ class _ViewEventsState extends State<ViewEvents> {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: 1.6,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 24,
+                    mainAxisSpacing: 24,
+                    childAspectRatio: 1.1, // make cards taller
                   ),
                   itemCount: events.length,
                   itemBuilder: (context, index) => _buildEventCard(events[index]),
@@ -169,60 +203,82 @@ class _ViewEventsState extends State<ViewEvents> {
   }
 
   Widget _buildEventCard(dynamic event) {
-    final String title = event['eventName'] ?? event['symposiumName'] ?? "Achievement";
+    final String title = event['eventName'] ?? event['symposiumName'] ?? "Achievement Record";
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[100]!),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 4))],
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 8))],
       ),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: primaryDark.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
-          child: Icon(Icons.workspace_premium_outlined, color: primaryDark, size: 24),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF1E293B))),
-        subtitle: Text("${event['college']} | ${event['eventDate']}", style: TextStyle(color: Colors.grey[500])),
-        iconColor: primaryDark,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(25, 10, 25, 25),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDetailRow("Participant", event['name']),
-                _buildDetailRow("Roll Number", event['rollNumber']),
-                _buildDetailRow("Category", event['eventType']),
-                _buildDetailRow("Standing", event['positionSecured']),
-                _buildDetailRow("Scope", event['interOrIntraEvent']),
-                const SizedBox(height: 20),
-                if (event['certificationLink'] != null && event['certificationLink'].toString().isNotEmpty)
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.link_rounded, size: 18),
-                    label: const Text("Certificate Proof"),
-                    style: ElevatedButton.styleFrom(backgroundColor: accentColor, foregroundColor: primaryDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                  ),
-              ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            leading: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: accentBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(14)),
+              child: Icon(Icons.workspace_premium_rounded, color: accentBlue, size: 24),
             ),
+            title: Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: textPrimary, letterSpacing: -0.5)),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 6.0),
+              child: Text("${event['college'] ?? 'N/A'} • ${event['eventDate'] ?? 'Unknown'}", style: TextStyle(color: textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+            ),
+            iconColor: accentBlue,
+            children: [
+              Container(
+                color: Colors.grey.shade50,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailRow("Participant", event['name'], Icons.person_outline),
+                    _buildDetailRow("Identifier", event['rollNumber'], Icons.badge_outlined),
+                    _buildDetailRow("Category", event['eventType'], Icons.category_outlined),
+                    _buildDetailRow("Standing", event['positionSecured'], Icons.emoji_events_outlined),
+                    _buildDetailRow("Scope", event['interOrIntraEvent'], Icons.public_outlined),
+                    const SizedBox(height: 24),
+                    if (event['certificationLink'] != null && event['certificationLink'].toString().isNotEmpty)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.verified_rounded, size: 18, color: Colors.white),
+                          label: const Text("Examine Proof", style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String? value, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("$label: ", style: TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value)),
+          Icon(icon, size: 18, color: textSecondary),
+          const SizedBox(width: 10),
+          SizedBox(width: 80, child: Text(label, style: TextStyle(color: textSecondary, fontWeight: FontWeight.w600, fontSize: 14))),
+          const Text(" :  ", style: TextStyle(color: Colors.grey)),
+          Expanded(child: Text(value ?? "-", style: TextStyle(color: textPrimary, fontWeight: FontWeight.w700, fontSize: 14))),
         ],
       ),
     );
