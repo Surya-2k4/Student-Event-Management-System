@@ -1,0 +1,116 @@
+Analyzing Student-Event-Management-System...                    
+
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\main.dart:29:11 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\admin_dashboard.dart:73:30 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin_dashboard.dart:120:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin_dashboard.dart:201:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin_dashboard.dart:208:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin_dashboard.dart:245:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin_dashboard.dart:252:54 - deprecated_member_use
+  error - The method 'createStaff' isn't defined for the type 'AuthService' - lib\screens\admin_dashboard.dart:289:39 - undefined_method
+   info - Don't use 'BuildContext's across async gaps - lib\screens\admin_dashboard.dart:298:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\admin_dashboard.dart:299:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\admin_dashboard.dart:301:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\event_registration.dart:213:59 - use_build_context_synchronously
+  error - The method '_buildSectionHeading' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:229:17 - undefined_method
+  error - Undefined name 'gridCols' - lib\screens\event_registration.dart:234:35 - undefined_identifier
+  error - Undefined name 'gridCols' - lib\screens\event_registration.dart:237:37 - undefined_identifier
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:239:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:240:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:241:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:242:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:243:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:244:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:245:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:246:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:247:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:248:21 - undefined_method
+  error - The method '_buildDateInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:249:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:250:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:251:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:252:21 - undefined_method
+  error - The method '_buildInput' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:253:21 - undefined_method
+  error - The method '_buildDropdown' isn't defined for the type '_EventRegistrationState' - lib\screens\event_registration.dart:254:21 - undefined_method
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\event_registration.dart:476:9 - deprecated_member_use
+  error - Undefined name 'SharedPreferences' - lib\screens\login_screen.dart:50:25 - undefined_identifier
+  error - The method 'ResponsiveLayout' isn't defined for the type '_LoginScreenState' - lib\screens\login_screen.dart:120:30 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\login_screen.dart:144:25 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\login_screen.dart:157:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\login_screen.dart:161:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\login_screen.dart:187:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\login_screen.dart:243:32 - deprecated_member_use
+  error - The method 'LoginScreen' isn't defined for the type '_RegisterScreenState' - lib\screens\register_screen.dart:107:61 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\register_screen.dart:165:25 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\register_screen.dart:178:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\register_screen.dart:182:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\register_screen.dart:208:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\register_screen.dart:264:32 - deprecated_member_use
+  error - A try block must be followed by an 'on', 'catch', or 'finally' clause - lib\screens\report.dart:76:5 - missing_catch_or_finally
+warning - The value of the local variable 'fetchedEvents' isn't used - lib\screens\report.dart:77:13 - unused_local_variable
+  error - The method 'EventService' isn't defined for the type '_ReportState' - lib\screens\report.dart:77:35 - undefined_method
+  error - Undefined name 'e' - lib\screens\report.dart:81:43 - undefined_identifier
+  error - Undefined name 'email' - lib\screens\report.dart:87:12 - undefined_identifier
+  error - Undefined name 'email' - lib\screens\report.dart:87:53 - undefined_identifier
+warning - The value of the local variable 'uri' isn't used - lib\screens\report.dart:95:11 - unused_local_variable
+  error - The method 'EventService' isn't defined for the type '_ReportState' - lib\screens\report.dart:98:35 - undefined_method
+  error - Undefined name 'filters' - lib\screens\report.dart:100:18 - undefined_identifier
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\report.dart:225:59 - use_build_context_synchronously
+  error - The method 'ResponsiveLayout' isn't defined for the type '_ReportState' - lib\screens\report.dart:240:13 - undefined_method
+  error - Undefined name 'title' - lib\screens\report.dart:290:9 - undefined_identifier
+  error - Expected to find ')' - lib\screens\report.dart:290:14 - expected_token
+  error - Expected to find ']' - lib\screens\report.dart:290:14 - expected_token
+  error - Expected to find ';' - lib\screens\report.dart:298:7 - expected_token
+warning - Dead code - lib\screens\report.dart:298:8 - dead_code
+  error - Expected an identifier - lib\screens\report.dart:298:8 - missing_identifier
+  error - Unexpected text ';' - lib\screens\report.dart:298:8 - unexpected_token
+warning - The label 'body' isn't used - lib\screens\report.dart:299:7 - unused_label
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\report.dart:333:35 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\report.dart:362:35 - deprecated_member_use
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:470:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:474:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:478:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:482:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:486:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:490:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:494:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:498:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:502:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:506:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:510:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:514:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:518:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:522:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:526:43 - undefined_method
+  error - The method '_buildDetailText' isn't defined for the type '_ReportState' - lib\screens\report.dart:530:43 - undefined_method
+  error - Expected to find ';' - lib\screens\report.dart:546:15 - expected_token
+  error - Expected an identifier - lib\screens\report.dart:546:16 - missing_identifier
+  error - Expected to find ';' - lib\screens\report.dart:546:16 - expected_token
+  error - Unexpected text ';' - lib\screens\report.dart:546:16 - unexpected_token
+  error - Expected an identifier - lib\screens\report.dart:547:5 - missing_identifier
+  error - Unexpected text ';' - lib\screens\report.dart:547:5 - unexpected_token
+   info - Unnecessary empty statement - lib\screens\report.dart:547:6 - empty_statements
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\report.dart:574:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\report.dart:628:39 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\report.dart:713:7 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\report.dart:737:55 - deprecated_member_use
+warning - Unused import: 'package:flutter_auth/screens/login_screen.dart' - lib\screens\splash_screen.dart:3:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\user_screen.dart:76:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\user_screen.dart:100:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\user_screen.dart:159:53 - deprecated_member_use
+   info - The 'child' argument should be last in widget constructor invocations - lib\screens\user_screen.dart:161:9 - sort_child_properties_last
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\user_screen.dart:163:97 - deprecated_member_use
+  error - The named parameter 'backgroundColor' isn't defined - lib\screens\user_screen.dart:177:9 - undefined_named_parameter
+  error - The named parameter 'body' isn't defined - lib\screens\user_screen.dart:178:9 - undefined_named_parameter
+  error - Undefined name 'userRole' - lib\screens\view_events.dart:41:7 - undefined_identifier
+  error - The method '_fetchEvents' isn't defined for the type '_ViewEventsState' - lib\screens\view_events.dart:54:5 - undefined_method
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\view_events.dart:104:59 - use_build_context_synchronously
+  error - Undefined name '_fetchEvents' - lib\screens\view_events.dart:112:95 - undefined_identifier
+  error - The method 'ResponsiveLayout' isn't defined for the type '_ViewEventsState' - lib\screens\view_events.dart:120:17 - undefined_method
+   info - The 'child' argument should be last in widget constructor invocations - lib\screens\view_events.dart:146:9 - sort_child_properties_last
+  error - The named parameter 'title' isn't defined - lib\screens\view_events.dart:176:9 - undefined_named_parameter
+  error - The named parameter 'backgroundColor' isn't defined - lib\screens\view_events.dart:177:9 - undefined_named_parameter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\view_events.dart:190:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\view_events.dart:196:56 - deprecated_member_use
+  error - Expected to find ')' - lib\screens\view_events.dart:330:6 - expected_token
+  error - Expected to find ']' - lib\screens\view_events.dart:330:6 - expected_token
+

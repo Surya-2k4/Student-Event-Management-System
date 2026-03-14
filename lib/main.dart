@@ -20,10 +20,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-<<<<<<< Updated upstream
-      title: 'Flutter Auth',
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
-=======
       title: 'KEC SEMS',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -62,7 +58,6 @@ class MyApp extends StatelessWidget {
           labelStyle: TextStyle(color: Colors.grey[600]),
         ),
       ),
->>>>>>> Stashed changes
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => SplashScreen(),

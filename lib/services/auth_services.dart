@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_auth/services/config.dart';
 
 class AuthService {
-  final String baseUrl = "http://localhost:5000"; // Change to your backend URL
 
   // Register User
   Future<String?> register(
@@ -13,7 +13,7 @@ class AuthService {
     String password,
   ) async {
     final response = await http.post(
-      Uri.parse("$baseUrl/register"),
+      Uri.parse(AppConfig.register),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "name": name,
@@ -24,7 +24,37 @@ class AuthService {
     );
 
     final data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return null; // Success
+    } else {
+      return data["message"]; // Return error message
+    }
+  }
+
+  // Create Staff
+  Future<String?> createStaff(
+    String name,
+    String email,
+    String password,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    final response = await http.post(
+      Uri.parse("${AppConfig.baseUrl}/auth/create-staff"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "name": name,
+        "email": email,
+        "password": password,
+        "role": "staff",
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return null; // Success
     } else {
       return data["message"]; // Return error message
@@ -34,7 +64,7 @@ class AuthService {
   // Login User
   Future<String?> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse("$baseUrl/login"),
+      Uri.parse(AppConfig.login),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "password": password}),
     );
@@ -53,7 +83,7 @@ class AuthService {
   // Fetch User Details
   Future<Map<String, String>?> fetchUserDetails(String email) async {
     final response = await http.get(
-      Uri.parse("$baseUrl/user?email=$email"),
+      Uri.parse("${AppConfig.userDetails}?email=$email"),
       headers: {"Content-Type": "application/json"},
     );
 

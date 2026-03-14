@@ -1,0 +1,27 @@
+Connected to Neon PostgreSQL
+[
+  { column_name: 'id', data_type: 'integer' },
+  { column_name: 'event_date', data_type: 'date' },
+  { column_name: 'event_days_spent', data_type: 'integer' },
+  { column_name: 'prize_amount', data_type: 'numeric' },
+  {
+    column_name: 'created_at',
+    data_type: 'timestamp without time zone'
+  },
+  { column_name: 'contact', data_type: 'character varying' },
+  { column_name: 'roll_number', data_type: 'character varying' },
+  { column_name: 'symposium_name', data_type: 'character varying' },
+  { column_name: 'event_type', data_type: 'character varying' },
+  { column_name: 'team_or_individual', data_type: 'character varying' },
+  { column_name: 'team_members', data_type: 'text' },
+  { column_name: 'position_secured', data_type: 'character varying' },
+  { column_name: 'certification_link', data_type: 'text' },
+  {
+    column_name: 'inter_or_intra_event',
+    data_type: 'character varying'
+  },
+  { column_name: 'name', data_type: 'character varying' },
+  { column_name: 'email', data_type: 'character varying' },
+  { column_name: 'event_name', data_type: 'character varying' },
+  { column_name: 'college', data_type: 'character varying' }
+]

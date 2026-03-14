@@ -13,13 +13,10 @@ class _UserScreenState extends State<UserScreen> {
   String name = "";
   String rollNumber = "";
   String email = "";
-<<<<<<< Updated upstream
-=======
   String userRole = "Student";
 
   final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
   final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
->>>>>>> Stashed changes
 
   @override
   void initState() {
@@ -59,23 +56,37 @@ class _UserScreenState extends State<UserScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: const Text(
-            "User Profile",
-            style: TextStyle(fontSize: 24, color: Colors.white),
-          ),
-<<<<<<< Updated upstream
-          backgroundColor: Colors.blueAccent,
+          title: const Text("Student Dashboard", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          backgroundColor: primaryDark,
           elevation: 0,
-          automaticallyImplyLeading: false, // Prevent back button
-          iconTheme: const IconThemeData(color: Colors.black),
           actions: [
             IconButton(
+              icon: const Icon(Icons.logout_rounded, color: Colors.white),
               onPressed: logout,
-              icon: const Icon(
-                Icons.logout,
-                color: Color.fromARGB(255, 254, 253, 253),
-=======
+            )
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 30),
+                  _buildInfoCard(),
+                  const SizedBox(height: 30),
+                  const Text("Quick Actions", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                  const SizedBox(height: 20),
+                  _buildActionGrid(crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -185,112 +196,12 @@ class _UserScreenState extends State<UserScreen> {
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B))),
                   Text(sub, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                 ],
->>>>>>> Stashed changes
               ),
             ),
           ],
-        ),
-        backgroundColor: Colors.grey[100],
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 600),
-              child: Card(
-                elevation: 12,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(25.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const CircleAvatar(
-                        radius: 60,
-                        backgroundImage: AssetImage('assets/avatar.png'),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildInfoTile(Icons.person_outline, "Name", name),
-                      if (!email.endsWith('@kongu.ac.in'))
-                        _buildInfoTile(
-                          Icons.badge_outlined,
-                          "Roll Number",
-                          rollNumber,
-                        ),
-                      _buildInfoTile(Icons.email_outlined, "Gmail", email),
-                      const SizedBox(height: 20),
-                      if (!email.endsWith('@kongu.ac.in'))
-                        _buildButton(
-                          "Register for Event",
-                          () => Navigator.pushNamed(
-                            context,
-                            "/event_registration",
-                          ),
-                        ),
-                      _buildButton(
-                        "View Registered Event",
-                        () => Navigator.pushNamed(context, "/view_events"),
-                      ),
-                      _buildButton(
-                        "Report",
-                        () => Navigator.pushNamed(context, "/report"),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoTile(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Icon(icon, size: 28, color: Colors.blueAccent),
-          const SizedBox(width: 12),
-          Text(
-            "$label:",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildButton(String text, VoidCallback onPressed) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          minimumSize: const Size(double.infinity, 55),
-          elevation: 6,
-        ),
-        onPressed: onPressed,
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
       ),
     );
   }
 }
+

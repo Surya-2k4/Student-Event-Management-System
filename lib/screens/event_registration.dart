@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_auth/services/auth_services.dart';
+import 'package:flutter_auth/services/event_services.dart';
 
 class EventRegistration extends StatefulWidget {
   const EventRegistration({super.key});
@@ -37,12 +36,9 @@ class _EventRegistrationState extends State<EventRegistration> {
   bool isLoading = false;
   String userRole = "student";
 
-<<<<<<< Updated upstream
-=======
   final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
   final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
 
->>>>>>> Stashed changes
   @override
   void initState() {
     super.initState();
@@ -87,45 +83,38 @@ class _EventRegistrationState extends State<EventRegistration> {
       return;
     }
 
-    final String apiUrl = "http://localhost:5000/register-event";
-
     setState(() {
       isLoading = true;
     });
 
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "name": nameController.text,
-        "email": emailController.text,
-        "eventName": eventNameController.text,
-        "college": collegeController.text,
-        "contact": contactController.text,
-        "rollNumber": rollNumberController.text,
-        "symposiumName": symposiumNameController.text,
-        "eventType": eventTypeController.text,
-        "teamOrIndividual": teamOrIndividualController.text,
-        "teamMembers": teamMembersController.text,
-        "eventDate": eventDateController.text,
-        "eventDaysSpent": eventDaysSpentController.text,
-        "prizeAmount": prizeAmountController.text,
-        "positionSecured": positionSecuredController.text,
-        "certificationLink": certificationLinkController.text,
-        "interOrIntraEvent": interOrIntraEvent,
-      }),
-    );
+    final success = await EventService().registerEvent({
+      "name": nameController.text,
+      "email": emailController.text,
+      "eventName": eventNameController.text,
+      "college": collegeController.text,
+      "contact": contactController.text,
+      "rollNumber": rollNumberController.text,
+      "symposiumName": symposiumNameController.text,
+      "eventType": eventTypeController.text,
+      "teamOrIndividual": teamOrIndividualController.text,
+      "teamMembers": teamMembersController.text,
+      "eventDate": eventDateController.text,
+      "eventDaysSpent": eventDaysSpentController.text,
+      "prizeAmount": prizeAmountController.text,
+      "positionSecured": positionSecuredController.text,
+      "certificationLink": certificationLinkController.text,
+      "interOrIntraEvent": interOrIntraEvent,
+    });
 
     setState(() {
       isLoading = false;
     });
 
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 201) {
+    if (success) {
       _showDialog("Event registered successfully!", Colors.green);
       _clearFields();
     } else {
-      _showMessage(data['message'], Colors.red);
+      _showMessage("Registration failed. Please try again.", Colors.red);
     }
   }
 
@@ -198,23 +187,11 @@ class _EventRegistrationState extends State<EventRegistration> {
 
   @override
   Widget build(BuildContext context) {
+    int gridCols = MediaQuery.of(context).size.width > 800 ? 2 : 1;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-<<<<<<< Updated upstream
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, "/user_screen");
-          },
-        ),
-        title: const Text(
-          "Event Registration",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        backgroundColor: Colors.blueAccent,
-        centerTitle: true,
-=======
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () async {
             if (Navigator.canPop(context)) {
@@ -233,7 +210,6 @@ class _EventRegistrationState extends State<EventRegistration> {
         title: const Text("New Achievement", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: primaryDark,
         elevation: 0,
->>>>>>> Stashed changes
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -243,14 +219,6 @@ class _EventRegistrationState extends State<EventRegistration> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-<<<<<<< Updated upstream
-                _buildInputField(nameController, "Full Name", Icons.person),
-                _buildInputField(emailController, "Email", Icons.email),
-                _buildInputField(
-                  collegeController,
-                  "College Name",
-                  Icons.school,
-=======
                 _buildSectionHeading("Technical Details", "Provide the core information about the event"),
                 const SizedBox(height: 30),
                 GridView.count(
@@ -278,142 +246,91 @@ class _EventRegistrationState extends State<EventRegistration> {
                     _buildInput(certificationLinkController, "Certificate URL", Icons.link_rounded),
                     _buildDropdown("Participation Scope", interOrIntraEvent, ['Inter', 'Intra'], (v) => setState(() => interOrIntraEvent = v)),
                   ],
->>>>>>> Stashed changes
                 ),
-                _buildInputField(
-                  contactController,
-                  "Contact Number",
-                  Icons.phone,
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Contact number is required';
-                    } else if (value.length != 10) {
-                      return 'Contact number should be 10 digits';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  rollNumberController,
-                  "Roll Number",
-                  Icons.confirmation_number,
-                ),
-                _buildInputField(
-                  symposiumNameController,
-                  "Symposium Name",
-                  Icons.event_note,
-                ),
-                _buildInputField(
-                  eventNameController,
-                  "Event Name",
-                  Icons.event,
-                ),
-                _buildInputField(
-                  eventTypeController,
-                  "Event Type",
-                  Icons.category,
-                ),
-                _buildInputField(
-                  teamOrIndividualController,
-                  "Team or Individual",
-                  Icons.group,
-                ),
-                _buildInputField(
-                  teamMembersController,
-                  "Team Members Name",
-                  Icons.people,
-                ),
-                _buildDateInputField(
-                  eventDateController,
-                  "Event Date",
-                  Icons.date_range,
-                  context,
-                ),
-                _buildInputField(
-                  eventDaysSpentController,
-                  "Event Days Spent",
-                  Icons.timer,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Event days spent is required';
-                    } else if (int.tryParse(value) == null) {
-                      return 'Event days spent should be a number';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  prizeAmountController,
-                  "Prize Amount",
-                  Icons.attach_money,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Prize amount is required';
-                    } else if (int.tryParse(value) == null) {
-                      return 'Prize amount should be a number';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  positionSecuredController,
-                  "Position Secured",
-                  Icons.emoji_events,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Position secured is required';
-                    } else if (int.tryParse(value) == null) {
-                      return 'Position secured should be a number';
-                    }
-                    return null;
-                  },
-                ),
-                _buildInputField(
-                  certificationLinkController,
-                  "Certification Link",
-                  Icons.link,
-                ),
-                _buildDropdownField(
-                  "Inter & Intra Event",
-                  Icons.event,
-                  (value) {
-                    setState(() {
-                      interOrIntraEvent = value;
-                    });
-                  },
-                  interOrIntraEvent,
-                  ["Inter", "Intra"],
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
                 isLoading
                     ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.deepPurpleAccent,
-                      ),
-                    )
-                    : ElevatedButton(
-                      onPressed: registerEvent,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                        child: CircularProgressIndicator(color: Colors.blueAccent),
+                      )
+                    : SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton(
+                          onPressed: registerEvent,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B82F6),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          ),
+                          child: const Text("Register Achievement", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ),
-                      child: const Text(
-                        "Register",
-                        style: TextStyle(fontSize: 18, color: Colors.black),
-                      ),
-                    ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionHeading(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+        const SizedBox(height: 5),
+        Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+      ],
+    );
+  }
+
+  Widget _buildInput(TextEditingController ctrl, String label, IconData icon, {bool readOnly = false, bool isNumber = false}) {
+    return TextFormField(
+      controller: ctrl,
+      readOnly: readOnly,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF3B82F6)),
+        filled: true,
+        fillColor: readOnly ? Colors.grey[100] : Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF3B82F6))),
+      ),
+      validator: (v) => v!.isEmpty ? "Required" : null,
+    );
+  }
+
+  Widget _buildDateInput() {
+    return TextFormField(
+      controller: eventDateController,
+      readOnly: true,
+      onTap: () => _selectDate(context),
+      decoration: InputDecoration(
+        labelText: "Event Date",
+        prefixIcon: const Icon(Icons.date_range_outlined, color: Color(0xFF3B82F6)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF3B82F6))),
+      ),
+      validator: (v) => v!.isEmpty ? "Required" : null,
+    );
+  }
+
+  Widget _buildDropdown(String label, String? value, List<String> items, Function(String?) onChanged) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: const Icon(Icons.category_outlined, color: Color(0xFF3B82F6)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF3B82F6))),
+      ),
+      validator: (v) => v == null ? "Required" : null,
     );
   }
 

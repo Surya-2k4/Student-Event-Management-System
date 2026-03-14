@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_auth/screens/user_screen.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_auth/utils/responsive_layout.dart';
+import 'package:flutter_auth/services/event_services.dart';
 
 class ViewEvents extends StatefulWidget {
   const ViewEvents({super.key});
@@ -15,13 +14,10 @@ class _ViewEventsState extends State<ViewEvents> {
   List<dynamic> events = [];
   bool isLoading = true;
   String email = "";
-<<<<<<< Updated upstream
-  String rollNumber = "";
-=======
+  String userRole = "student";
 
   final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
   final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
->>>>>>> Stashed changes
 
   @override
   void initState() {
@@ -41,12 +37,6 @@ class _ViewEventsState extends State<ViewEvents> {
     }
 
     setState(() {
-<<<<<<< Updated upstream
-      email = prefs.getString("email") ?? "";
-      rollNumber = prefs.getString("rollNumber") ?? "";
-    });
-    fetchEvents();
-=======
       email = storedEmail;
       userRole = storedRole;
     });
@@ -62,29 +52,19 @@ class _ViewEventsState extends State<ViewEvents> {
     }
 
     _fetchEvents();
->>>>>>> Stashed changes
   }
 
-  Future<void> fetchEvents() async {
-    final String apiUrl =
-        "http://localhost:5000/view-events"; // Replace if needed
-
+  Future<void> _fetchEvents() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-          email.endsWith('@kongu.ac.in') ? apiUrl : "$apiUrl?email=$email",
-        ),
+      final fetchedEvents = await EventService().fetchEvents(
+        email: email.endsWith('@kongu.ac.in') ? null : email,
       );
 
-      if (response.statusCode == 200) {
-        if (mounted) {
-          setState(() {
-            events = json.decode(response.body).reversed.toList();
-            isLoading = false;
-          });
-        }
-      } else {
-        throw Exception("Failed to load events");
+      if (mounted) {
+        setState(() {
+          events = fetchedEvents.reversed.toList();
+          isLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -101,16 +81,6 @@ class _ViewEventsState extends State<ViewEvents> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-<<<<<<< Updated upstream
-          icon: Icon(Icons.arrow_back),
-          color: Colors.white,
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => UserScreen()),
-            );
-          },
-=======
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () async {
             if (Navigator.canPop(context)) {
@@ -193,34 +163,8 @@ class _ViewEventsState extends State<ViewEvents> {
                 ),
             ],
           ),
->>>>>>> Stashed changes
         ),
-        title: Text("Registered Events", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blueAccent,
       ),
-<<<<<<< Updated upstream
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : events.isEmpty
-              ? Center(
-                child: Text(
-                  "No events registered yet!",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              )
-              : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(
-                      "Total Event Registrations: ${events.length}",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-=======
     );
   }
 
@@ -262,117 +206,12 @@ class _ViewEventsState extends State<ViewEvents> {
                     icon: const Icon(Icons.link_rounded, size: 18),
                     label: const Text("Certificate Proof"),
                     style: ElevatedButton.styleFrom(backgroundColor: accentColor, foregroundColor: primaryDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
->>>>>>> Stashed changes
                   ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: EdgeInsets.all(10),
-                      itemCount: events.length,
-                      itemBuilder: (context, index) {
-                        final event = events[index];
-                        return Card(
-                          elevation: 4,
-                          margin: EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ExpansionTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.blueAccent,
-                              child: Text(
-                                event["eventName"][0].toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              event["eventName"],
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                            subtitle: Text(event["college"]),
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildDetailRow("Full Name", event['name']),
-                                    _buildDetailRow("Email", event['email']),
-                                    _buildDetailRow(
-                                      "College Name",
-                                      event['college'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Contact",
-                                      event['contact'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Roll Number",
-                                      event['rollNumber'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Symposium Name",
-                                      event['symposiumName'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Event Type",
-                                      event['eventType'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Team or Individual",
-                                      event['teamOrIndividual'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Team Members",
-                                      event['teamMembers'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Event Date",
-                                      event['eventDate'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Event Days Spent",
-                                      event['eventDaysSpent'].toString(),
-                                    ),
-                                    _buildDetailRow(
-                                      "Prize Amount",
-                                      event['prizeAmount'].toString(),
-                                    ),
-                                    _buildDetailRow(
-                                      "Position Secured",
-                                      event['positionSecured'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Certification Link",
-                                      event['certificationLink'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Inter or Intra Event",
-                                      event['interOrIntraEvent'],
-                                    ),
-                                    _buildDetailRow(
-                                      "Date Registered",
-                                      event['date'],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
