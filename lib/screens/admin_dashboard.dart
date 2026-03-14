@@ -19,8 +19,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
   bool isLoading = true;
 
   // Professional Theme Colors
-  final Color primaryDark = const Color(0xFF1A1C2E);
-  final Color accentColor = const Color(0xFF2DD4BF);
+  final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
+  final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
   final Color cardColor = Colors.white;
 
   @override
@@ -109,7 +109,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle),
-                child: const CircleAvatar(radius: 45, backgroundColor: Color(0xFF1E293B), child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 45)),
+                child: const CircleAvatar(radius: 45, backgroundImage: AssetImage('assets/avatar.png'), backgroundColor: Color(0xFF1E293B)),
               ),
               const SizedBox(height: 15),
               Text(isAdmin ? "Super Admin" : "Staff Member", 
@@ -198,7 +198,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +242,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.grey[100]!),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 6))],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -340,7 +340,7 @@ class _ManageStaffDialogState extends State<ManageStaffDialog> {
       obscureText: isPass,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF1A1C2E)),
+        prefixIcon: Icon(icon, color: const Color(0xFF0F172A)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey[50],

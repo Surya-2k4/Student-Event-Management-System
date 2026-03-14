@@ -40,6 +40,7 @@ dependencies:
   path_provider: ^2.0.11
   pdf: ^3.11.3
   intl: ^0.20.2
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -60,8 +61,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mca.png
-    - assets/kecc_logo.png
+    - assets/kec_logo.png
     - assets/avatar.png
+    - assets/KEC_entrance.png
+    - assets/auth_bg.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_auth/services/auth_services.dart';
-import 'package:flutter_auth/utils/responsive_layout.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -14,10 +13,13 @@ class _UserScreenState extends State<UserScreen> {
   String name = "";
   String rollNumber = "";
   String email = "";
+<<<<<<< Updated upstream
+=======
   String userRole = "Student";
 
-  final Color primaryDark = const Color(0xFF1A1C2E);
-  final Color accentColor = const Color(0xFF2DD4BF);
+  final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
+  final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
+>>>>>>> Stashed changes
 
   @override
   void initState() {
@@ -27,26 +29,26 @@ class _UserScreenState extends State<UserScreen> {
 
   void loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final storedEmail = prefs.getString("email") ?? "";
-    final storedRole = prefs.getString("role") ?? "Student";
-    
-    setState(() {
-      email = storedEmail;
-      userRole = storedRole;
-    });
-
-    final userDetails = await AuthService().fetchUserDetails(storedEmail);
+    final email = prefs.getString("email") ?? "";
+    final userDetails = await AuthService().fetchUserDetails(email);
     if (userDetails != null) {
-      if (mounted) {
-        setState(() {
-          name = userDetails["name"]!;
-          rollNumber = userDetails["rollNumber"]!;
-        });
-      }
+      setState(() {
+        name = userDetails["name"]!;
+        rollNumber = userDetails["rollNumber"]!;
+        this.email = userDetails["email"]!;
+      });
+    } else {
+      setState(() {
+        name = "";
+        rollNumber = "";
+        this.email = email;
+      });
     }
   }
 
   void logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
     await AuthService().logout();
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, "/login");
@@ -54,53 +56,26 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text("Student Dashboard", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: primaryDark,
-        elevation: 0,
-        actions: [
-          IconButton(onPressed: logout, icon: const Icon(Icons.logout_rounded, color: Colors.white)),
-          const SizedBox(width: 10),
-        ],
-      ),
-      body: ResponsiveLayout(
-        mobile: _buildContent(padding: 20),
-        desktop: _buildContent(padding: 40, isWide: true),
-      ),
-    );
-  }
-
-  Widget _buildContent({required double padding, bool isWide = false}) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(padding),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: Column(
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 40),
-              if (isWide)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 2, child: _buildInfoCard()),
-                    const SizedBox(width: 30),
-                    Expanded(flex: 3, child: _buildActionGrid(crossAxisCount: 2)),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    _buildInfoCard(),
-                    const SizedBox(height: 30),
-                    _buildActionGrid(crossAxisCount: 1),
-                  ],
-                ),
-            ],
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "User Profile",
+            style: TextStyle(fontSize: 24, color: Colors.white),
           ),
+<<<<<<< Updated upstream
+          backgroundColor: Colors.blueAccent,
+          elevation: 0,
+          automaticallyImplyLeading: false, // Prevent back button
+          iconTheme: const IconThemeData(color: Colors.black),
+          actions: [
+            IconButton(
+              onPressed: logout,
+              icon: const Icon(
+                Icons.logout,
+                color: Color.fromARGB(255, 254, 253, 253),
+=======
         ),
       ),
     );
@@ -113,14 +88,14 @@ class _UserScreenState extends State<UserScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle),
-            child: const CircleAvatar(radius: 50, backgroundColor: Color(0xFF1E293B), child: Icon(Icons.person, size: 50, color: Colors.white)),
+            child: const CircleAvatar(radius: 50, backgroundImage: AssetImage('assets/avatar.png'), backgroundColor: Color(0xFF1E293B)),
           ),
           const SizedBox(height: 20),
           Text(name.isEmpty ? "Student Name" : name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
@@ -137,14 +112,14 @@ class _UserScreenState extends State<UserScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[100]!),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("Digital Identity", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
           const Divider(height: 30),
-          _buildInfoItem(Icons.badge_outlined, "Roll No", rollNumber),
+          _buildInfoItem(Icons.badge_outlined, "Roll Number", rollNumber),
           _buildInfoItem(Icons.domain_rounded, "Institution", "Kongu Engineering"),
           _buildInfoItem(Icons.verified_user_outlined, "Verified Account", userRole),
         ],
@@ -182,8 +157,7 @@ class _UserScreenState extends State<UserScreen> {
       children: [
         _buildActionTile("Add Achievement", "Document a new event", Icons.add_task_rounded, const Color(0xFF3B82F6), "/event_registration"),
         _buildActionTile("View History", "Check past participations", Icons.history_edu_rounded, const Color(0xFF10B981), "/view_events"),
-        _buildActionTile("Generate Summary", "Export record overview", Icons.summarize_rounded, const Color(0xFF8B5CF6), "/report"),
-        _buildActionTile("Privacy Settings", "Manage account visibility", Icons.privacy_tip_rounded, const Color(0xFF64748B), ""),
+        _buildActionTile("Generate Report", "Export record overview", Icons.summarize_rounded, const Color(0xFF8B5CF6), "/report"),
       ],
     );
   }
@@ -197,7 +171,7 @@ class _UserScreenState extends State<UserScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[100]!),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
@@ -211,10 +185,110 @@ class _UserScreenState extends State<UserScreen> {
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B))),
                   Text(sub, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                 ],
+>>>>>>> Stashed changes
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: Colors.grey[300]),
           ],
+        ),
+        backgroundColor: Colors.grey[100],
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 600),
+              child: Card(
+                elevation: 12,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(25.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const CircleAvatar(
+                        radius: 60,
+                        backgroundImage: AssetImage('assets/avatar.png'),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInfoTile(Icons.person_outline, "Name", name),
+                      if (!email.endsWith('@kongu.ac.in'))
+                        _buildInfoTile(
+                          Icons.badge_outlined,
+                          "Roll Number",
+                          rollNumber,
+                        ),
+                      _buildInfoTile(Icons.email_outlined, "Gmail", email),
+                      const SizedBox(height: 20),
+                      if (!email.endsWith('@kongu.ac.in'))
+                        _buildButton(
+                          "Register for Event",
+                          () => Navigator.pushNamed(
+                            context,
+                            "/event_registration",
+                          ),
+                        ),
+                      _buildButton(
+                        "View Registered Event",
+                        () => Navigator.pushNamed(context, "/view_events"),
+                      ),
+                      _buildButton(
+                        "Report",
+                        () => Navigator.pushNamed(context, "/report"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Icon(icon, size: 28, color: Colors.blueAccent),
+          const SizedBox(width: 12),
+          Text(
+            "$label:",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButton(String text, VoidCallback onPressed) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueAccent,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          minimumSize: const Size(double.infinity, 55),
+          elevation: 6,
+        ),
+        onPressed: onPressed,
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
       ),
     );

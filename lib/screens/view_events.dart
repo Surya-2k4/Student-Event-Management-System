@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_auth/services/event_services.dart';
-import 'package:flutter_auth/utils/responsive_layout.dart';
+import 'package:flutter_auth/screens/user_screen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ViewEvents extends StatefulWidget {
@@ -13,47 +14,118 @@ class ViewEvents extends StatefulWidget {
 class _ViewEventsState extends State<ViewEvents> {
   List<dynamic> events = [];
   bool isLoading = true;
-  String userRole = "Student";
   String email = "";
+<<<<<<< Updated upstream
+  String rollNumber = "";
+=======
 
-  final Color primaryDark = const Color(0xFF1A1C2E);
-  final Color accentColor = const Color(0xFF2DD4BF);
+  final Color primaryDark = const Color(0xFF0F172A); // Deep Navy
+  final Color accentColor = const Color(0xFF3B82F6); // Vibrant Blue
+>>>>>>> Stashed changes
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    loadUserData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    final storedEmail = prefs.getString("email") ?? "";
+    final storedRole = prefs.getString("role")?.toLowerCase() ?? "student";
+
+    if (token.isEmpty) {
+      if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
+      return;
+    }
+
     setState(() {
+<<<<<<< Updated upstream
       email = prefs.getString("email") ?? "";
-      userRole = prefs.getString("role")?.toLowerCase() ?? "student";
+      rollNumber = prefs.getString("rollNumber") ?? "";
     });
+    fetchEvents();
+=======
+      email = storedEmail;
+      userRole = storedRole;
+    });
+
+    // On refresh, redirect to dashboard if root
+    if (mounted) {
+      Future.microtask(() {
+        if (mounted && !Navigator.canPop(context)) {
+          String targetRoute = (storedRole == "admin" || storedRole == "staff") ? "/admin" : "/user_screen";
+          Navigator.pushReplacementNamed(context, targetRoute);
+        }
+      });
+    }
+
     _fetchEvents();
+>>>>>>> Stashed changes
   }
 
-  Future<void> _fetchEvents() async {
-    setState(() => isLoading = true);
+  Future<void> fetchEvents() async {
+    final String apiUrl =
+        "http://localhost:5000/view-events"; // Replace if needed
+
     try {
-      final fetched = await EventService().fetchEvents(
-        email: (userRole == "admin" || userRole == "staff") ? null : email,
+      final response = await http.get(
+        Uri.parse(
+          email.endsWith('@kongu.ac.in') ? apiUrl : "$apiUrl?email=$email",
+        ),
       );
-      setState(() {
-        events = fetched.reversed.toList();
-        isLoading = false;
-      });
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            events = json.decode(response.body).reversed.toList();
+            isLoading = false;
+          });
+        }
+      } else {
+        throw Exception("Failed to load events");
+      }
     } catch (e) {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+      debugPrint("Error fetching events: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        leading: IconButton(
+<<<<<<< Updated upstream
+          icon: Icon(Icons.arrow_back),
+          color: Colors.white,
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => UserScreen()),
+            );
+          },
+=======
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () async {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              String targetRoute = "/user_screen";
+              final prefs = await SharedPreferences.getInstance();
+              final role = prefs.getString("role")?.toLowerCase() ?? "";
+              if (role == "admin" || role == "staff") {
+                targetRoute = "/admin";
+              }
+              if (mounted) Navigator.pushReplacementNamed(context, targetRoute);
+            }
+          },
+        ),
         title: const Text("Achievement Archive", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: primaryDark,
         elevation: 0,
@@ -121,8 +193,34 @@ class _ViewEventsState extends State<ViewEvents> {
                 ),
             ],
           ),
+>>>>>>> Stashed changes
         ),
+        title: Text("Registered Events", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blueAccent,
       ),
+<<<<<<< Updated upstream
+      body:
+          isLoading
+              ? Center(child: CircularProgressIndicator())
+              : events.isEmpty
+              ? Center(
+                child: Text(
+                  "No events registered yet!",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              )
+              : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      "Total Event Registrations: ${events.length}",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+=======
     );
   }
 
@@ -134,7 +232,7 @@ class _ViewEventsState extends State<ViewEvents> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey[100]!),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 4))],
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -164,22 +262,128 @@ class _ViewEventsState extends State<ViewEvents> {
                     icon: const Icon(Icons.link_rounded, size: 18),
                     label: const Text("Certificate Proof"),
                     style: ElevatedButton.styleFrom(backgroundColor: accentColor, foregroundColor: primaryDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+>>>>>>> Stashed changes
                   ),
-              ],
-            ),
-          )
-        ],
-      ),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: EdgeInsets.all(10),
+                      itemCount: events.length,
+                      itemBuilder: (context, index) {
+                        final event = events[index];
+                        return Card(
+                          elevation: 4,
+                          margin: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ExpansionTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.blueAccent,
+                              child: Text(
+                                event["eventName"][0].toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              event["eventName"],
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            subtitle: Text(event["college"]),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildDetailRow("Full Name", event['name']),
+                                    _buildDetailRow("Email", event['email']),
+                                    _buildDetailRow(
+                                      "College Name",
+                                      event['college'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Contact",
+                                      event['contact'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Roll Number",
+                                      event['rollNumber'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Symposium Name",
+                                      event['symposiumName'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Event Type",
+                                      event['eventType'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Team or Individual",
+                                      event['teamOrIndividual'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Team Members",
+                                      event['teamMembers'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Event Date",
+                                      event['eventDate'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Event Days Spent",
+                                      event['eventDaysSpent'].toString(),
+                                    ),
+                                    _buildDetailRow(
+                                      "Prize Amount",
+                                      event['prizeAmount'].toString(),
+                                    ),
+                                    _buildDetailRow(
+                                      "Position Secured",
+                                      event['positionSecured'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Certification Link",
+                                      event['certificationLink'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Inter or Intra Event",
+                                      event['interOrIntraEvent'],
+                                    ),
+                                    _buildDetailRow(
+                                      "Date Registered",
+                                      event['date'],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 
-  Widget _buildDetailRow(String label, dynamic value) {
+  Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey, fontSize: 14)),
-          Text(value?.toString() ?? "-", style: const TextStyle(color: Color(0xFF1E293B), fontSize: 14)),
+          Text("$label: ", style: TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(child: Text(value)),
         ],
       ),
     );

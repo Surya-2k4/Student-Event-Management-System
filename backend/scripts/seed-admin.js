@@ -1,6 +1,7 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 async function seedAdmin() {
   const name = 'Super Admin';
@@ -32,10 +33,10 @@ async function seedAdmin() {
       );
     }
     
-    console.log('✅ Admin user processed successfully!');
+    console.log(' Admin user processed successfully!');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error seeding admin:', err);
+    console.error(' Error seeding admin:', err);
     process.exit(1);
   }
 }

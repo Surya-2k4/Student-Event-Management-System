@@ -1,12 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 
 const app = express();
+const db = require('./config/db');
+
+// Test database connection
+db.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error(' Database connection error:', err.stack);
+  } else {
+    console.log(' Database connected successfully at:', res.rows[0].now);
+  }
+});
 
 // Middleware
 app.use(helmet());

@@ -6,10 +6,16 @@ exports.register = async (req, res) => {
   try {
     const { name, rollNumber, email, password } = req.body;
 
-    // Check existing
-    const userCheck = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (userCheck.rows.length > 0) {
+    // Check existing email
+    const emailCheck = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (emailCheck.rows.length > 0) {
       return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // Check existing roll number
+    const rollCheck = await db.query('SELECT * FROM users WHERE roll_number = $1', [rollNumber]);
+    if (rollCheck.rows.length > 0) {
+      return res.status(400).json({ message: "Roll Number already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -21,6 +27,9 @@ exports.register = async (req, res) => {
     res.status(201).json({ message: "User Registered", user: result.rows[0] });
   } catch (error) {
     console.error(error);
+    if (error.code === '23505') {
+      return res.status(400).json({ message: "An account with this data already exists." });
+    }
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -46,8 +55,8 @@ exports.login = async (req, res) => {
     const { password: _, ...userWithoutPassword } = user;
     res.json({ token, user: userWithoutPassword });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error('Login Error:', error);
+    res.status(500).json({ message: "Server error: " + error.message });
   }
 };
 

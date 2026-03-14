@@ -1,18 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'config.dart';
 
 class AuthService {
-  // Get common headers with authorization token
-  Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
-    return {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer $token",
-    };
-  }
+  final String baseUrl = "http://localhost:5000"; // Change to your backend URL
 
   // Register User
   Future<String?> register(
@@ -22,7 +13,7 @@ class AuthService {
     String password,
   ) async {
     final response = await http.post(
-      Uri.parse(AppConfig.register),
+      Uri.parse("$baseUrl/register"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "name": name,
@@ -33,7 +24,7 @@ class AuthService {
     );
 
     final data = jsonDecode(response.body);
-    if (response.statusCode == 200 || response.statusCode == 201) {
+    if (response.statusCode == 200) {
       return null; // Success
     } else {
       return data["message"]; // Return error message
@@ -43,7 +34,7 @@ class AuthService {
   // Login User
   Future<String?> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse(AppConfig.login),
+      Uri.parse("$baseUrl/login"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "password": password}),
     );
@@ -53,39 +44,17 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", data["token"]);
       await prefs.setString("email", data["user"]["email"]);
-      await prefs.setString("role", data["user"]["role"]);
-      await prefs.setInt("userId", data["user"]["id"]); // Save ID for updates
       return null; // Success
     } else {
       return data["message"]; // Return error message
     }
   }
 
-  // Create Staff (Admin only)
-  Future<String?> createStaff(String name, String email, String password) async {
-    final response = await http.post(
-      Uri.parse("${AppConfig.baseUrl}/auth/create-staff"),
-      headers: await _getHeaders(),
-      body: jsonEncode({
-        "name": name,
-        "email": email,
-        "password": password,
-      }),
-    );
-
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 201) {
-      return null; // Success
-    } else {
-      return data["message"];
-    }
-  }
-
   // Fetch User Details
   Future<Map<String, String>?> fetchUserDetails(String email) async {
     final response = await http.get(
-      Uri.parse("${AppConfig.userDetails}?email=$email"),
-      headers: await _getHeaders(),
+      Uri.parse("$baseUrl/user?email=$email"),
+      headers: {"Content-Type": "application/json"},
     );
 
     if (response.statusCode == 200) {
@@ -94,7 +63,6 @@ class AuthService {
         "name": data["name"] ?? "",
         "rollNumber": data["rollNumber"] ?? "",
         "email": data["email"] ?? "",
-        "role": data["role"] ?? "Student",
       };
     } else {
       return null;
